@@ -13,6 +13,12 @@ namespace rusql
 		
 		mutable size_t set_i, get_i;
 		
+		void reset() const
+		{
+			set_i = 1;
+			get_i = 1;
+		}
+
 	public:
 		statement(sql::PreparedStatement* stmt)
 		: stmt(stmt)
@@ -20,12 +26,6 @@ namespace rusql
 		, set_i(1)
 		, get_i(1)
 		{}
-
-		void reset() const
-		{
-			set_i = 1;
-			get_i = 1;
-		}
 
 		const statement& operator<<(const std::string value) const
 		{
