@@ -84,6 +84,21 @@ namespace rusql
 	private:
 		class query_result_row {
 		public:
+			query_result_row(statement& s)
+			: stmt(s)
+			{}
+
+			template <typename T>
+			const statement& operator>>(T& x) const {
+				return stmt >> x;
+			}
+
+		private:
+			statement& stmt;
+		};
+
+		class query_iterator {
+		public:
 			query_iterator(statement& s)
 			: stmt(s)
 			, end(false)
@@ -99,10 +114,9 @@ namespace rusql
 			void operator++(){
 				end = !stmt.next();
 			}
-			
-			template <typename T>
-			const statement& operator>>(T& x) const {
-				return stmt >> x;
+
+			query_result_row operator*() {
+				return query_result_row(stmt);
 			}
 			
 		private:
