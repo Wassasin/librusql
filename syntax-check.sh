@@ -1,6 +1,8 @@
 #!/bin/bash
 
+[ -f "$(which $CXX)" ] || CXX=gcc
+
 for i in src/rusql/*.hpp; do
-	gcc --std=c++0x -fsyntax-only ${i}
+	$CXX --std=c++0x -fsyntax-only ${i}
 done
 
