@@ -44,31 +44,38 @@ namespace rusql
 			statement& stmt;
 		};
 
-		class query_iterator {
+		class query_iterator : public std::iterator<std::input_iterator_tag, query_result_row> {
 		public:
+			query_iterator()
+			: stmt(nullptr)
+			{}
+
 			query_iterator(statement& s)
-			: stmt(s)
-			, end(false)
+			: stmt(&s)
 			{
 				//Advance to the first row
 				operator++();
 			}
 			
+			bool operator ==(query_iterator const & rh) {
+				return stmt == rh.stmt;
+			}
+
 			bool operator !=(query_iterator const& rh) {
-				return end;
+				return !(stmt == rh.stmt);
 			}
 			
 			void operator++(){
-				end = !stmt.next();
+				if(!stmt->next())
+					stmt = nullptr;
 			}
 
 			query_result_row operator*() {
-				return query_result_row(stmt);
+				return query_result_row(*stmt);
 			}
 			
 		private:
-			statement& stmt;
-			bool end;
+			statement* stmt;
 		};
 
 	public:
@@ -131,7 +138,7 @@ namespace rusql
 		}
 
 		query_iterator end() {
-			return query_iterator(*this);
+			return query_iterator();
 		}
 		
 		bool execute() const
