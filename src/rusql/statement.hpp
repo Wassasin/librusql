@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <iterator>
 #include <cppconn/prepared_statement.h>
 
 namespace rusql
@@ -44,7 +45,7 @@ namespace rusql
 			statement& stmt;
 		};
 
-		class query_iterator : public std::iterator<std::input_iterator_tag, query_result_row> {
+		class query_iterator : public std::iterator<std::input_iterator_tag, query_result_row, std::ptrdiff_t, query_result_row, query_result_row> {
 		public:
 			query_iterator()
 			: stmt(nullptr)
@@ -65,9 +66,10 @@ namespace rusql
 				return !(stmt == rh.stmt);
 			}
 			
-			void operator++(){
+			query_iterator& operator++(){
 				if(!stmt->next())
 					stmt = nullptr;
+				return *this;
 			}
 
 			query_result_row operator*() {
