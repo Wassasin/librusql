@@ -22,6 +22,7 @@ namespace rusql
 		
 		mutable size_t set_i, get_i;
 		
+		/*! Resets the (internal) state of the statement, which is used for keeping track of which placeholders to replace when users to >> and << */
 		void reset() const
 		{
 			set_i = 1;
@@ -29,6 +30,7 @@ namespace rusql
 		}
 
 	private:
+		/*! An interface to a row, you can extract values from columns with >> as well as operator[string] as well as get_<type>(string column)*/
 		class query_result_row {
 		public:
 			query_result_row(statement& s)
@@ -44,6 +46,7 @@ namespace rusql
 			statement& stmt;
 		};
 
+		/*! An iterator that iterates over rows of a result. Knows when he has hit the last row. */
 		class query_iterator {
 		public:
 			query_iterator(statement& s)
@@ -72,6 +75,9 @@ namespace rusql
 		};
 
 	public:
+		/* Initializes a statement, with a statement. The object takes ownership of the statement.
+		\todo Change the ctor to accept a std::string, which we give to sql and intialize ourselves with. This should be a private-ctor or something because we take ownership of the pointer.
+		*/
 		statement(sql::PreparedStatement* stmt)
 		: stmt(stmt)
 		, data()
@@ -79,18 +85,21 @@ namespace rusql
 		, get_i(1)
 		{}
 
+		/*! Inserts the given argument in the current placeholder */
 		const statement& operator<<(const std::string value) const
 		{
 			stmt->setString(set_i++, value);
 			return *this;
 		}
 	
+		/*! Inserts the given argument in the current placeholder */
 		const statement& operator<<(const uint64_t value) const
 		{
 			stmt->setUInt64(set_i++, value);
 			return *this;
 		}
 		
+		/*! Extracts the value from the current placeholder */
 		const statement& operator>>(std::string& value) const
 		{
 			value = data->getString(get_i++);
