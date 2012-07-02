@@ -1,5 +1,5 @@
 #include <rusql/connection.hpp>
-#include <assert.h>
+#include <cassert>
 
 int main(int argc, char *argv[]) {
 	assert(argc == 5);
