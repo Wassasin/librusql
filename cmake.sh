@@ -3,5 +3,6 @@
 if [ -d /sw/ ]; then
 	./cmake-fink.sh
 else
-	echo "YOU HEATHEN"
+	echo "Fallback to linux make script!"
+	./cmake-linux.sh
 fi
