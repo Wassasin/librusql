@@ -31,7 +31,10 @@ namespace rusql
 		}
 
 	private:
-		/*! An interface to a row, you can extract values from columns with >> as well as operator[string] as well as get_<type>(string column)*/
+		/*! An interface to a row, you can extract values from columns with >> as well as operator[string] as well as get_<type>(string column)
+		Currently has a reference to the statment (with the ResultSet), so it makes now copy. Changing the statement (eg calling .next()), changes this query_result_row. That's why this class is private (but we have auto now...).
+		TODO: consider copying the data?
+		*/
 		class query_result_row {
 		public:
 			query_result_row(statement& s)
@@ -152,11 +155,21 @@ namespace rusql
 			return query_iterator();
 		}
 		
-		bool execute() const
+		void execute() const
 		{
 			auto r = stmt->execute();
+			// TODO: figure out when execute doesn't return 0.
+			// TODO: make better error handling.
+			if(r){
+				auto ptr = stmt->getWarnings();
+				if(ptr){
+					std::cout << "Fail: " << ptr->getMessage() << std::endl;
+				} else {
+					std::cout << "Fail without a message..." << std::endl;
+				}
+			}
+
 			reset();
-			return r;
 		}
 		
 		int update() const

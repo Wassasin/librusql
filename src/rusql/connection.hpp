@@ -48,9 +48,9 @@ namespace rusql
 			connect();
 		}
 	
-		bool execute(const std::string q)
+		void execute(const std::string q)
 		{
-			return prepare(q).execute();
+			prepare(q).execute();
 		}
 		
 		statement prepare(const std::string q)
