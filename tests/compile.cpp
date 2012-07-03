@@ -2,6 +2,6 @@
 #include <rusql/statement.hpp>
 
 int main() {
-	rusql::connection::connection_info("", "", "", "");
+	rusql::connection::info("", "", "", "");
 	return 0;
 }
