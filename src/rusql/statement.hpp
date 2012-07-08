@@ -42,6 +42,18 @@ namespace rusql
 			const statement& operator>>(T& x) const {
 				return stmt >> x;
 			}
+			
+			std::string get_string(const std::string col) const {
+				return stmt.get_string(col);
+			}
+			
+			uint64_t get_uint64(const std::string col) const {
+				return stmt.get_uint64(col);
+			}
+
+			bool is_null(const std::string col) const {
+				return stmt.is_null(col);
+			}
 
 		private:
 			statement& stmt;
@@ -133,6 +145,11 @@ namespace rusql
 		uint64_t get_uint64(const std::string col) const
 		{
 			return data->getUInt64(col);
+		}
+		
+		bool is_null(const std::string col) const
+		{
+			return data->isNull(col);
 		}
 		
 		/*! Advances the statement-result to the next row
