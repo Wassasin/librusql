@@ -1,0 +1,21 @@
+Source: librusql
+Priority: extra
+Maintainer: Wouter Geraedts <w.geraedts@onii.org>
+Build-Depends: debhelper (>= 8.0.0), cdbs, cmake
+Standards-Version: 3.9.2
+Section: libs
+Homepage: https://github.com/Wassasin/librusql
+
+Package: librusql-dev
+Section: libdevel
+Architecture: all
+Depends: librusql (= ${binary:Version}), libmysqlcppconn-dev
+Description: Headers for a fault-tolerant header-only MySQLCppConn C++11-wrapper
+ These are the headers of the header-only library for librusql.
+
+Package: librusql
+Section: libs
+Architecture: any
+Depends: libmysqlcppconn5, ${misc:Depends}
+Description: A fault-tolerant header-only MySQLCppConn C++11-wrapper
+ This is the dummy package managing dependencies of the header-only librusql.

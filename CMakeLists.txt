@@ -8,7 +8,13 @@ file(GLOB_RECURSE RUSQL_HEADERS src/*.hpp)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-# TODO install lines
+install(FILES ${RUSQL_HEADERS} DESTINATION include/rusql)
+install(FILES
+	cmake/modules/FindMysqlCppConn.cmake
+	cmake/modules/Findrusql.cmake
+
+	DESTINATION share/cmake-2.8/Modules
+)
 
 add_subdirectory(tests)
 enable_testing()

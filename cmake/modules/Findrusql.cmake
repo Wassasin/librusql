@@ -8,7 +8,7 @@ message(STATUS "Checking for package 'rusql'")
 
 set(rusql_FOUND FALSE)
 
-set(rusql_EXPECTED_PATHS ~/src/librusql/src /usr/local/include /usr/include)
+set(rusql_EXPECTED_PATHS /usr/local/include /usr/include)
 find_path(rusql_INCLUDE_DIRS rusql/connection.hpp ${rusql_EXPECTED_PATHS})
 
 find_package(MysqlCppConn REQUIRED)
