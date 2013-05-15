@@ -3,6 +3,7 @@
 #include <memory>
 #include <iterator>
 #include <cppconn/prepared_statement.h>
+#include <cppconn/warning.h>
 
 namespace rusql
 {
