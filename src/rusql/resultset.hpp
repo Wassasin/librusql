@@ -13,7 +13,7 @@ namespace rusql {
 		{}
 		
 		NoResults()
-		: runtime_error ("There were not results in your dataset.")
+		: runtime_error ("There were no results in your dataset.")
 		{}
 	};
 	
@@ -23,7 +23,7 @@ namespace rusql {
 		{}
 		
 		NoMoreResults()
-		: runtime_error ("There were results, but we're out of those")
+		: runtime_error ("There were results, but we've iterated past them (of before them, anyhow, no results here)")
 		{}
 	};
 	
