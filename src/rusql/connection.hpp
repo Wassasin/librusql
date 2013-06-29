@@ -267,7 +267,7 @@ namespace rusql {
 		}
 
 		Connection& get_connection() {
-for (auto & c : connections) {
+			for (auto & c : connections) {
 				if (c->is_free()) return *c;
 			}
 
