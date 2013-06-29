@@ -1,4 +1,4 @@
-#include "connection.hpp"
+#include "rusql.hpp"
 
 #include <mysql_driver.h>
 

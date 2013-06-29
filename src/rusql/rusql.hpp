@@ -1,4 +1,3 @@
 #pragma once
 
-#include "statement.hpp"
-#include "connection.hpp"
+#include "database.hpp"

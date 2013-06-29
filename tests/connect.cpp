@@ -1,4 +1,4 @@
-#include <rusql/connection.hpp>
+#include <rusql/rusql.hpp>
 #include <cassert>
 
 int main(int argc, char *argv[]) {

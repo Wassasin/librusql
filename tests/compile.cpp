@@ -1,5 +1,4 @@
-#include <rusql/connection.hpp>
-#include <rusql/statement.hpp>
+#include <rusql/rusql.hpp>
 
 int main() {
 	rusql::Database(rusql::Database::ConstructionInfo{"", "", "", ""});
