@@ -50,11 +50,18 @@ namespace rusql {
 			statement->setUInt64 (position++, x);
 			return *this;
 		}
+		
+		PreparedStatement& bind_element (size_t& position, boost::none_t const&) {
+			statement->setNull(position++, 0);
+			return *this;
+		}
 
 		template <typename T>
 		PreparedStatement& bind_element (size_t& position, boost::optional<T> const& x) {
 			if (x) {
 				bind_element (position, *x);
+			} else {
+				bind_element(position, boost::none);
 			}
 			return *this;
 		}
