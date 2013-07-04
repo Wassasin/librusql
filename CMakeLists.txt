@@ -4,6 +4,8 @@ project(rusql)
 
 include_directories("${PROJECT_BINARY_DIR}")
 
+add_definitions("-std=c++0x -O0 -Wall -Wno-long-long")
+
 file(GLOB_RECURSE RUSQL_HEADERS src/*.hpp)
 file(GLOB_RECURSE RUSQL_SOURCES src/*.cpp)
 
@@ -27,7 +29,3 @@ install(FILES
 
 
 add_subdirectory(tests)
-enable_testing()
-add_test(compile tests/compile)
-add_test(connect ${CMAKE_SOURCE_DIR}/tests/runtest.pl connect)
-add_test(connectfail ${CMAKE_SOURCE_DIR}/tests/runtest.pl connectfail)
