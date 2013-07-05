@@ -394,6 +394,7 @@ namespace rusql { namespace mysql {
 	template <typename T>
 	MYSQL_BIND get_mysql_bind(T const& x){
 		MYSQL_BIND b;
+		std::memset(&b, 0, sizeof(b));
 		b.buffer_type = type_traits<T>::type;
 		// Remove constness: meaning this cannot be used with mysql_stmt_bind_result
 		b.buffer = const_cast<char*>(type_traits<T>::data::get(x));
