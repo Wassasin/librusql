@@ -45,24 +45,23 @@ include(cmake/join.cmake)
 join("${warnings}" " " warnings)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warnings}")
 
-file(GLOB_RECURSE RUSQL_HEADERS src/*.hpp)
-file(GLOB_RECURSE RUSQL_SOURCES src/*.cpp)
+file(GLOB_RECURSE RUSQL_HEADERS src/rusql/*.hpp)
+file(GLOB_RECURSE RUSQL_SOURCES src/rusql/*.cpp)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-find_package(MysqlCppConn REQUIRED)
-include_directories(${MysqlCppConn_INCLUDE_DIRS})
+find_package(MYSQL REQUIRED)
+include_directories(${MYSQL_INCLUDE_DIRS})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(rusql ${RUSQL_SOURCES})
-target_link_libraries(rusql ${MysqlCppConn_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(rusql ${MYSQL_LIBRARIES} ${Boost_LIBRARIES})
 
 install(FILES ${RUSQL_HEADERS} DESTINATION include/rusql)
 install(FILES
-	cmake/modules/FindMysqlCppConn.cmake
+	cmake/modules/FindMYSQL.cmake
 	cmake/modules/Findrusql.cmake
-
 	DESTINATION share/cmake-2.8/Modules
 )
 

@@ -11,13 +11,13 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?), (?), (?)", "a", "b", "c");
 		auto res = db->query("SELECT * FROM rusqltest");
-		test(res.get_string(1) == "a", "a was inserted");
+		test(res.get_string(0) == "a", "a was inserted");
 		res.next();
 		test(res, "two results");
-		test(res.get_string(1) == "b", "b was inserted");
+		test(res.get_string(0) == "b", "b was inserted");
 		res.next();
 		test(res, "three results");
-		test(res.get_string(1) == "c", "c was inserted");
+		test(res.get_string(0) == "c", "c was inserted");
 		res.next();
 		test(!res, "not more than three results");
 	} catch(std::exception &e) {
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 5);
 		auto res = db->query("SELECT * FROM rusqltest");
-		diag("Actually stored string: '" + res.get_string(1) + "'");
+		diag("Actually stored string: '" + res.get_string(0) + "'");
 		fail("Disallowed to enter numerics in string field");
 	} catch(std::exception &) {
 		pass("Disallowed to enter numerics in string field");
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 	db->execute("INSERT INTO rusqltest VALUES (?)", "6");
 	try {
 		auto res = db->query("SELECT * FROM rusqltest");
-		auto r = res.get_uint64(1);
+		auto r = res.get_uint64(0);
 		diag("Actually retrieved numeric: " + to_string(r));
 		fail("Disallowed to retrieve numerics from string field");
 	} catch(std::exception &) {
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 3);
 		auto res = db->query("SELECT * FROM rusqltest");
-		test(res.get_uint64(1) == 3, "3 was inserted");
+		test(res.get_uint64(0) == 3, "3 was inserted");
 		res.next();
 		test(!res, "not more than one result");
 	} catch(std::exception &e) {
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 
 	try {
 		auto res = db->query("SELECT * FROM rusqltest");
-		auto r = res.get_string(1);
+		auto r = res.get_string(0);
 		diag("Actually retrieved string: '" + r + "'");
 		fail("Disallowed to retrieve strings from numeric field");
 	} catch(std::exception&) {
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", "4");
 		auto res = db->query("SELECT * FROM rusqltest");
-		auto r = res.get_uint64(1);
+		auto r = res.get_uint64(0);
 		diag("Actually retrieved numeric: " + to_string(r));
 		fail("Disallowed to enter strings in numeric field");
 	} catch(std::exception&) {
@@ -102,19 +102,20 @@ int main(int argc, char *argv[]) {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 2);
 		pass("Insert values into NULL field");
 		auto res = db->query("SELECT * FROM rusqltest");
-		bool r = res.is_null(1);
+		bool r = res.is_null(0);
 		pass("Could ask if value is null");
 		test(!r, "Value inserted from 2 was not null");
 	} catch(std::exception &e) {
 		diag(e);
 	}
 	test_finish_try();
+	db->execute("DELETE FROM rusqltest");
 	test_start_try(3);
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", boost::none);
 		pass("Insert boost::none");
 		auto res = db->query("SELECT * FROM rusqltest");
-		bool r = res.is_null(1);
+		bool r = res.is_null(0);
 		pass("Could ask if value is null");
 		test(r, "Value inserted from none was null");
 	} catch(std::exception &e) {

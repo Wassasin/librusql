@@ -17,8 +17,8 @@ int main(int argc, char *argv[]) {
 	test(db.get() != 0, "Connected");
 
 	try {
-		fail("Ping not implemented");
-		//test(db->ping(), "Ping");
+		db->ping();
+		pass("Ping");
 	} catch(std::exception &e) {
 		diag(e);
 		fail("Ping threw");

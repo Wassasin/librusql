@@ -1,4 +1,3 @@
-add_definitions("-std=c++0x -O0 -Wall -Wno-long-long -DNDEBUG")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../src")
 
 add_custom_target(check COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/tests.pl"

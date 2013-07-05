@@ -10,17 +10,17 @@ namespace rusql {
 		struct ConstructionInfo {
 			std::string host, user, password, database;
 
-			ConstructionInfo (const std::string host, const std::string user, const std::string password, const std::string database)
-				: host (host)
-				, user (user)
-				, password (password)
-				, database (database)
+			ConstructionInfo (const std::string host_, const std::string user_, const std::string password_, const std::string database_)
+				: host (host_)
+				, user (user_)
+				, password (password_)
+				, database (database_)
 			{}
 		};
 
 
 		Database (ConstructionInfo const& rh)
-			: info (rh) {
+		: info (rh) {
 		}
 
 		Connection& get_connection() {
@@ -31,18 +31,22 @@ namespace rusql {
 			return create_connection();
 		}
 
-		ResultSet query (std::string const query) {
-			return get_connection().query (query);
+		ResultSet query (std::string const q) {
+			return get_connection().query (q);
 		}
 
 		template <typename ... T>
-		ResultSet query (std::string const query, T const& ... args) {
-			return get_connection().prepare (query).bind (args ...).query();
+		ResultSet query (std::string const q, T const& ... args) {
+			return get_connection().prepare (q).bind (args ...).query();
 		}
 
 		template <typename ... T>
-		void execute (std::string const query, T const& ... args) {
-			return get_connection().prepare (query).bind (args ...).execute();
+		void execute (std::string const q, T const& ... args) {
+			return get_connection().prepare (q).bind (args ...).execute();
+		}
+		
+		void ping(){
+			get_connection().ping();
 		}
 
 	private:

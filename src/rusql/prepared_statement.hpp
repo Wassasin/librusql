@@ -5,67 +5,29 @@
 #include <cppconn/prepared_statement.h>
 
 #include <boost/optional.hpp>
+#include "rumysql.hpp"
 
 namespace rusql {
 	struct PreparedStatement {
-		template <typename ConvertableToShared>
-		PreparedStatement (ConvertableToShared && statement)
-			: statement (statement)
+		PreparedStatement (rusql::mysql::Statement&& statement_)
+		: statement (std::move(statement_))
 		{}
 
 		ResultSet query() {
-			return ResultSet (statement->executeQuery());
+			return std::move(statement.bind_execute());
 		}
 
 		void execute() {
-			statement->execute();
+			statement.execute();
 		}
 
-		template <typename Head, typename ... T>
-		PreparedStatement& bind (Head const& head, T const& ... values) {
-			size_t index = 1;
-			return bind_ (index, head, values ...);
-		}
-
-		PreparedStatement& bind() {
+		template <typename ... T>
+		PreparedStatement& bind (T const& ... values) {
+			statement.bind(values ... );
 			return *this;
 		}
 
-		template <typename Head, typename ... T>
-		PreparedStatement& bind_ (size_t& index, Head const& head, T const& ... tail) {
-			bind_element (index, head);
-			return bind_ (index, tail ...);
-		}
-
-		PreparedStatement& bind_ (size_t const) {
-			return *this;
-		}
-
-		PreparedStatement& bind_element (size_t& position, std::string const& x) {
-			statement->setString (position++, x);
-			return *this;
-		}
-
-		PreparedStatement& bind_element (size_t& position, uint64_t const& x) {
-			statement->setUInt64 (position++, x);
-			return *this;
-		}
-		
-		PreparedStatement& bind_element (size_t& position, boost::none_t const&) {
-			statement->setNull(position++, 0);
-			return *this;
-		}
-
-		template <typename T>
-		PreparedStatement& bind_element (size_t& position, boost::optional<T> const& x) {
-			if (x) {
-				bind_element (position, *x);
-			} else {
-				bind_element(position, boost::none);
-			}
-			return *this;
-		}
 	private:
-		std::unique_ptr<sql::PreparedStatement> statement;
+		rusql::mysql::Statement statement;
 	};
 }
