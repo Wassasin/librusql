@@ -109,6 +109,7 @@ int main(int argc, char *argv[]) {
 		diag(e);
 	}
 	test_finish_try();
+	db->execute("DELETE FROM rusqltest");
 	test_start_try(3);
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", boost::none);
