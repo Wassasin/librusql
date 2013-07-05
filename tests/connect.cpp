@@ -4,14 +4,23 @@
 #include "database_test.hpp"
 
 int main(int argc, char *argv[]) {
-	test_init(2);
-	test_start_try(2);
+	std::shared_ptr<rusql::Database> db;
 	try {
-		auto db = get_database(argc, argv);
-		pass("Constructor finished");
+		// on invalid parameters, this method skips all tests and calls exit()
+		// on failed connection, this method should throw
+		db = get_database(argc, argv);
+	} catch(std::exception &e) {
+		diag(e);
+	}
+
+	test_init(2);
+	test(db.get() != 0, "Connected");
+
+	try {
 		fail("Ping not implemented");
 		//test(db->ping(), "Ping");
 	} catch(std::exception &e) {
+		diag(e);
+		fail("Ping threw");
 	}
-	test_finish_try();
 }
