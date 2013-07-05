@@ -3,8 +3,8 @@
 #include "database_test.hpp"
 
 int main(int argc, char *argv[]) {
-	test_init(20);
 	auto db = get_database(argc, argv);
+	test_init(20);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);

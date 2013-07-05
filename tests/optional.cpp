@@ -14,8 +14,8 @@ static bool contains(rusql::ResultSet &rs, std::string value) {
 }
 
 int main(int argc, char *argv[]) {
-	test_init(4);
 	auto db = get_database(argc, argv);
+	test_init(4);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NULL)");
 
 	test_start_try(1);
