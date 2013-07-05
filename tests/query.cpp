@@ -1,10 +1,11 @@
 #include <rusql/rusql.hpp>
 #include "test.hpp"
 #include "database_test.hpp"
+#include <cstdlib>
 
 static bool contains(rusql::ResultSet &rs, std::string value) {
 	while(rs) {
-		if(rs.get_string(1) == value) {
+		if(rs.get_string(0) == value) {
 			return true;
 		}
 		rs.next();

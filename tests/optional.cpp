@@ -5,7 +5,7 @@
 
 static bool contains(rusql::ResultSet &rs, std::string value) {
 	while(rs) {
-		if(rs.get_string(1) == value) {
+		if(rs.get_string(0) == value) {
 			return true;
 		}
 		rs.next();
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", boost::optional<std::string>());
 		auto res = db->query("SELECT * FROM rusqltest");
-		bool null = res.is_null(1);
+		bool null = res.is_null(0);
 		pass("could ask if value was null");
 		test(null, "value inserted from empty optional was null");
 	} catch(std::exception &e) {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
 	try {
 		auto res = db->query("SELECT * FROM rusqltest");
-		auto r = res.get_string(1);
+		auto r = res.get_string(0);
 		diag("Result of get_string on null: '" + r + "'");
 		fail("get_string on null throws");
 	} catch(std::exception&) {

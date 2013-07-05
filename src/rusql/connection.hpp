@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include <cppconn/connection.h>
+#include "rumysql.hpp"
 
 #include "resultset.hpp"
 #include "prepared_statement.hpp"
@@ -22,24 +22,31 @@ namespace rusql {
 		}
 
 		bool is_valid() {
-			return !connection->isClosed();
+			return connection.ping() == 0;
 		}
 
 		//! Returns whether or not the connection is free to do an additional query i.e. there is not a resultset dependent on this connection anymore.
 		bool is_free() {
 			return result.expired();
 		}
+		
+		ResultSet use_result(){
+			return ResultSet(connection);
+		}
 
-		ResultSet query (std::string const query) {
-			make_valid();
-			ResultSet set = prepare (query).query();
+		ResultSet query (std::string const q) {
+			connection.query(q);
+			ResultSet set = use_result();
 			result = set.get_token();
 			return set;
 		}
 
-		PreparedStatement prepare (std::string const query) {
-			make_valid();
-			return PreparedStatement (connection->prepareStatement (query));
+		PreparedStatement prepare (std::string const q) {
+			return PreparedStatement(rusql::mysql::Statement(connection, q));
+		}
+		
+		void ping(){
+			connection.ping();
 		}
 
 	private:
@@ -48,6 +55,7 @@ namespace rusql {
 
 		std::shared_ptr<Database> database;
 		std::weak_ptr<ResultSet::Token> result;
-		std::unique_ptr<sql::Connection> connection;
+		
+		rusql::mysql::Connection connection;
 	};
 }
