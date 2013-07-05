@@ -13,8 +13,8 @@ static bool contains(rusql::ResultSet &rs, std::string value) {
 }
 
 int main(int argc, char *argv[]) {
-	test_init(2);
 	auto db = get_database(argc, argv);
+	test_init(2);
 	db->execute("CREATE TABLE rusqltest (`value` INT(2) NOT NULL)");
 	auto res = db->query("SHOW TABLES");
 	test(contains(res, "rusqltest"), "rusqltest table created");
