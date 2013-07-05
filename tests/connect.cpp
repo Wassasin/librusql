@@ -1,12 +1,17 @@
 #include <rusql/rusql.hpp>
-#include <cassert>
+#include <iostream>
+#include "test.hpp"
+#include "database_test.hpp"
 
 int main(int argc, char *argv[]) {
-	assert(argc == 5);
+	test_init(2);
+	test_start_try(2);
 	try {
-		rusql::Database(rusql::Database::ConstructionInfo{argv[1], argv[2], argv[3], argv[4]});
-	} catch(...) {
-		return 0;
+		auto db = get_database(argc, argv);
+		pass("Constructor finished");
+		fail("Ping not implemented");
+		//test(db->ping(), "Ping");
+	} catch(std::exception &e) {
 	}
-	return 1;
+	test_finish_try();
 }
