@@ -335,6 +335,18 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <>
+	struct type_traits<char*> {
+		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef char_pointer_data data;
+	};
+	
+	template <>
+	struct type_traits<char const*> {
+		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef char_pointer_data data;
+	};
+	
+	template <>
 	struct type_traits<boost::none_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_NULL;
 		typedef null_data<boost::none_t> data;
