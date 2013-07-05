@@ -8,9 +8,10 @@ my @test_args = @ARGV;
 my @tests = qw(test_compile test_connect test_query test_placeholders test_optional);
 
 my $compiled_tests_dir;
-for(qw(./ tests/ ../tests ../build/tests)) {
+for(qw(. tests ../tests ../build/tests)) {
 	if(-f ("$_/" . $tests[0])) {
 		$compiled_tests_dir = $_;
+		last;
 	}
 }
 
