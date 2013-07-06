@@ -36,13 +36,13 @@ struct Connection;
 	//! You can automatically convert a row to a boost::fusion'd struct, given that the column names are the same as the members, and the types are constructible from the values.
 	struct ResultSet {
 		ResultSet (rusql::mysql::Connection& connection)
-		: data (rusql::mysql::MySQLUseResult(&connection))
+		: data (rusql::mysql::UseResult(&connection))
 		, token (new Token)
 		{
 			next();
 		}
 		
-		ResultSet (rusql::mysql::MySQLUseResult&& use_result)
+		ResultSet (rusql::mysql::UseResult&& use_result)
 		: data (std::move(use_result))
 		, token (new Token)
 		{
@@ -110,7 +110,7 @@ struct Connection;
 		}
 
 	private:
-		rusql::mysql::MySQLUseResult data;
+		rusql::mysql::UseResult data;
 		std::shared_ptr<Token> token;
 	};
 }

@@ -114,10 +114,9 @@ namespace rusql { namespace mysql {
 	//! Throws on:
 	//! - Any function called that returns an error code
 	//! - When the resultset is has no fields, but should have fields.
-	//TODO: Rename to UseResult
-	struct MySQLUseResult : boost::noncopyable {
+	struct UseResult : boost::noncopyable {
 		//! Grabs the current result from that connection
-		MySQLUseResult(Connection* connection_)
+		UseResult(Connection* connection_)
 		: connection(connection_)
 		, result(connection->use_result())
 		, current_row(nullptr)
@@ -129,7 +128,7 @@ namespace rusql { namespace mysql {
 			}
 		}
 		
-		MySQLUseResult(MySQLUseResult&& x)
+		UseResult(UseResult&& x)
 		: connection(x.connection)
 		, result(nullptr)
 		, current_row(nullptr)
@@ -138,14 +137,14 @@ namespace rusql { namespace mysql {
 			std::swap(current_row, x.current_row);
 		}
 		
-		MySQLUseResult& operator=(MySQLUseResult&& x){
+		UseResult& operator=(UseResult&& x){
 			connection = x.connection;
 			std::swap(result, x.result);
 			std::swap(current_row, x.current_row);
 			return *this;
 		}
 		
-		~MySQLUseResult(){
+		~UseResult(){
 			if(result){
 				close();
 			}
@@ -479,10 +478,10 @@ namespace rusql { namespace mysql {
 		}
 		
 		template<typename... T>
-		MySQLUseResult bind_execute(T const &... v) {
+		UseResult bind_execute(T const &... v) {
 			bind(v...);
 			execute();
-			return MySQLUseResult(&connection);
+			return UseResult(&connection);
 		}
 
 		#define STATEMENT_WRAP(name, function) RUSQL_WRAP(name, function, statement, *this, ErrorCheckerStatement)
