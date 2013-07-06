@@ -344,13 +344,15 @@ namespace rusql { namespace mysql {
 			};
 			
 			struct String {
-				static constexpr enum_field_types get(std::string const&){
+				template <typename T>
+				static constexpr enum_field_types get(T const&){
 					return MYSQL_TYPE_STRING;
 				}
 			};
 			
 			struct Null {
-				static constexpr enum_field_types get(boost::none_t const&){
+				template <typename T>
+				static constexpr enum_field_types get(T const&){
 					return MYSQL_TYPE_NULL;
 				}
 			};
