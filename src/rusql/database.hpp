@@ -31,6 +31,14 @@ namespace rusql {
 			return create_connection();
 		}
 
+		int number_of_active_connections() const {
+			int num = 0;
+			for(auto const &c : connections) {
+				if(!c->is_free()) num++;
+			}
+			return num;
+		}
+
 		ResultSet query (std::string const q) {
 			return get_connection().query (q);
 		}
