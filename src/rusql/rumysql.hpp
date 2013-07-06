@@ -379,6 +379,33 @@ namespace rusql { namespace mysql {
 				}
 			};
 		}
+		
+		namespace is_unsigned {
+			struct No {
+				template <typename T>
+				static constexpr bool get(T const&){
+					return false;
+				}
+			};
+			
+			struct Yes {
+				template <typename T>
+				static constexpr bool get(T const&){
+					return true;
+				}
+			};
+			
+			struct Optional {
+				template <typename T>
+				static bool get(boost::optional<T> const& x){
+					if(x){
+						return type_traits<T>::is_unsigned::get(*x);
+					} else {
+						return false;
+					}
+				}
+			};
+		}
 	}
 	
 	template <>
@@ -386,6 +413,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Tiny type;
 		typedef field::buffer::Primitive data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -393,6 +421,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Short type;
 		typedef field::buffer::Primitive data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -400,6 +429,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Long type;
 		typedef field::buffer::Primitive data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -407,6 +437,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::LongLong type;
 		typedef field::buffer::Primitive data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -414,6 +445,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Long type;
 		typedef field::buffer::Primitive data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::No is_unsigned;
 	};
 	
 	template <>
@@ -421,6 +453,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef field::buffer::String data;
 		typedef field::length::String length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <typename T>
@@ -428,6 +461,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Optional type;
 		typedef field::buffer::Optional data;
 		typedef field::length::Optional length;
+		typedef field::is_unsigned::Optional is_unsigned;
 	};
 	
 	template <size_t size>
@@ -435,6 +469,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -442,6 +477,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -449,6 +485,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
@@ -456,6 +493,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Null type;
 		typedef field::buffer::Null data;
 		typedef field::length::Fixed length;
+		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <typename T>
@@ -466,6 +504,7 @@ namespace rusql { namespace mysql {
 		// Remove constness: meaning this cannot be used with mysql_stmt_bind_result
 		b.buffer = const_cast<char*>(type_traits<T>::data::get(x));
 		b.buffer_length = type_traits<T>::length::get(x);
+		b.is_unsigned = type_traits<T>::is_unsigned::get(x);
 		return b;
 	}
 
