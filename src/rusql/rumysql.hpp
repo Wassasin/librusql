@@ -318,137 +318,168 @@ namespace rusql { namespace mysql {
 			};
 		}
 		
-		namespace is_null {
-			struct no {
-				template <typename T>
-				static bool get(T const&){ return false; }
+		namespace type {
+			template<typename T>
+			struct type_tag;
+			
+			template <>
+			struct type_tag<uint8_t> {
+				static constexpr enum_field_types get(uint8_t const&){
+					return MYSQL_TYPE_TINY;
+				}
 			};
 			
-			struct yes {
-				template <typename T>
-				static bool get(T const&){ return false; }
+			template <>
+			struct type_tag<uint16_t> {
+				static constexpr enum_field_types get(uint16_t const&){
+					return MYSQL_TYPE_SHORT;
+				}
 			};
 			
-			struct optional {
-				template <typename T>
-				static bool get(boost::optional<T> const& x){
-					if(x) {
-						return type_traits<T>::is_null::get(*x);
+			template <>
+			struct type_tag<uint32_t> {
+				static constexpr enum_field_types get(uint32_t const&){
+					return MYSQL_TYPE_LONG;
+				}
+			};
+			
+			template <>
+			struct type_tag<uint64_t> {
+				static constexpr enum_field_types get(uint64_t const&){
+					return MYSQL_TYPE_LONGLONG;
+				}
+			};
+			
+			template <>
+			struct type_tag<int32_t> {
+				static constexpr enum_field_types get(int32_t const&){
+					return MYSQL_TYPE_LONG;
+				}
+			};
+			
+			template <>
+			struct type_tag<std::string> {
+				static constexpr enum_field_types get(std::string const&){
+					return MYSQL_TYPE_STRING;
+				}
+			};
+			
+			template <>
+			struct type_tag<boost::none_t> {
+				static constexpr enum_field_types get(boost::none_t const&){
+					return MYSQL_TYPE_NULL;
+				}
+			};
+			
+			template <typename T>
+			struct type_tag<boost::optional<T>> {
+				static enum_field_types get(boost::optional<T> const& x){
+					if(x){
+						return type_traits<T>::type::get(*x);
 					} else {
-						return true;
+						return MYSQL_TYPE_NULL;
 					}
 				}
 			};
 			
-			struct pointer {
-				template <typename T>
-				static bool get(T const * const x){
-					return x == nullptr;
+			template <typename T>
+			struct type_tag<T*> {
+				static enum_field_types get(T const * const x){
+					if(x){
+						return type_traits<T>::type::get(*x);
+					} else {
+						return MYSQL_TYPE_NULL;
+					}
 				}
 			};
-		};
+		}
 	}
 	
 	template <>
 	struct type_traits<uint8_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_TINY;
+		typedef field::type::type_tag<uint8_t> type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<uint16_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_SHORT;
+		typedef field::type::type_tag<uint16_t> type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
+		typedef field::type::type_tag<uint32_t> type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_LONGLONG;
+		typedef field::type::type_tag<uint64_t> type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<int32_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
+		typedef field::type::type_tag<int32_t> type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<std::string>{
-		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef field::type::type_tag<std::string> type;
 		typedef field::buffer::std_string data;
 		typedef field::length::string length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
-		static constexpr enum_field_types type = type_traits<T>::type;
+		typedef field::type::type_tag<boost::optional<T>> type;
 		typedef field::buffer::optional data;
 		typedef field::length::optional length;
-		typedef field::is_null::optional is_null;
 	};
 	
 	template <size_t size>
 	struct type_traits<char[size]> {
-		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef field::type::type_tag<std::string> type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
-		typedef field::is_null::no is_null;
 	};
 	
 	template <>
 	struct type_traits<char*> {
-		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef field::type::type_tag<std::string> type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
-		typedef field::is_null::pointer is_null;
 	};
 	
 	template <>
 	struct type_traits<char const*> {
-		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
+		typedef field::type::type_tag<std::string> type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
-		typedef field::is_null::pointer is_null;
 	};
 	
 	template <>
 	struct type_traits<boost::none_t> {
-		static constexpr enum_field_types type = MYSQL_TYPE_NULL;
+		typedef field::type::type_tag<boost::none_t> type;
 		typedef field::buffer::null data;
 		typedef field::length::fixed length;
-		typedef field::is_null::yes is_null;
 	};
-	
-	static const my_bool field_is_null = 1;
-	static const my_bool field_is_not_null = 0;
 	
 	template <typename T>
 	MYSQL_BIND get_mysql_bind(T const& x){
 		MYSQL_BIND b;
 		std::memset(&b, 0, sizeof(b));
-		b.buffer_type = type_traits<T>::type;
+		b.buffer_type = type_traits<T>::type::get(x);
 		// Remove constness: meaning this cannot be used with mysql_stmt_bind_result
 		b.buffer = const_cast<char*>(type_traits<T>::data::get(x));
 		b.buffer_length = type_traits<T>::length::get(x);
-		b.is_null = const_cast<my_bool*>(type_traits<T>::is_null::get(x) ? &field_is_null : &field_is_not_null);
 		return b;
 	}
 
