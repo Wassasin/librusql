@@ -251,27 +251,27 @@ namespace rusql { namespace mysql {
 		//! A collection of functors that get the char const* to any type of variable, to pass to MYSQL_BIND for example.
 		namespace buffer {
 			//! All primitve types (int, double, etc.) can be simply cast to a char* and be done with it.
-			struct primitive {
+			struct Primitive {
 				template <typename T>
 				static char const* get(T const& x){
 					return reinterpret_cast<char const*>(&x);
 				}
 			};
 			
-			struct std_string {
+			struct String {
 				static char const* get(std::string const& x){
 					return x.c_str();
 				}
 			};
 			
-			struct char_pointer {
+			struct CharPointer {
 				static char const* get(char const* x){
 					return x;
 				}
 			};
 			
 			//! For boost::optional, returning the pointer only if the object was set.
-			struct optional {
+			struct Optional {
 				template <typename T>
 				static char const* get(boost::optional<T> const &x) {
 					if(x) {
@@ -283,7 +283,7 @@ namespace rusql { namespace mysql {
 			};
 			
 			//! For those types without data, such as boost::none_t
-			struct null {
+			struct Null {
 				template <typename T>
 				static char const* get(T const&) {
 					return nullptr;
@@ -293,20 +293,20 @@ namespace rusql { namespace mysql {
 		
 		namespace length {
 			//! For fields with a fixed length, such as int, double, etc.
-			struct fixed {
+			struct Fixed {
 				template <typename T>
 				static size_t get(T const&){
 					return 0;
 				}
 			};
 			
-			struct string {
+			struct String {
 				static size_t get(std::string x){
 					return x.size();
 				}
 			};
 			
-			struct optional {
+			struct Optional {
 				template <typename T>
 				static size_t get(boost::optional<T> const& x){
 					if(x){
@@ -382,78 +382,78 @@ namespace rusql { namespace mysql {
 	template <>
 	struct type_traits<uint8_t> {
 		typedef field::type::Tiny type;
-		typedef field::buffer::primitive data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Primitive data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint16_t> {
 		typedef field::type::Short type;
-		typedef field::buffer::primitive data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Primitive data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> {
 		typedef field::type::Long type;
-		typedef field::buffer::primitive data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Primitive data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> {
 		typedef field::type::LongLong type;
-		typedef field::buffer::primitive data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Primitive data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <>
 	struct type_traits<int32_t> {
 		typedef field::type::Long type;
-		typedef field::buffer::primitive data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Primitive data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <>
 	struct type_traits<std::string>{
 		typedef field::type::String type;
-		typedef field::buffer::std_string data;
-		typedef field::length::string length;
+		typedef field::buffer::String data;
+		typedef field::length::String length;
 	};
 	
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
 		typedef field::type::Optional type;
-		typedef field::buffer::optional data;
-		typedef field::length::optional length;
+		typedef field::buffer::Optional data;
+		typedef field::length::Optional length;
 	};
 	
 	template <size_t size>
 	struct type_traits<char[size]> {
 		typedef field::type::String type;
-		typedef field::buffer::char_pointer data;
-		typedef field::length::string length;
+		typedef field::buffer::CharPointer data;
+		typedef field::length::String length;
 	};
 	
 	template <>
 	struct type_traits<char*> {
 		typedef field::type::String type;
-		typedef field::buffer::char_pointer data;
-		typedef field::length::string length;
+		typedef field::buffer::CharPointer data;
+		typedef field::length::String length;
 	};
 	
 	template <>
 	struct type_traits<char const*> {
 		typedef field::type::String type;
-		typedef field::buffer::char_pointer data;
-		typedef field::length::string length;
+		typedef field::buffer::CharPointer data;
+		typedef field::length::String length;
 	};
 	
 	template <>
 	struct type_traits<boost::none_t> {
 		typedef field::type::Null type;
-		typedef field::buffer::null data;
-		typedef field::length::fixed length;
+		typedef field::buffer::Null data;
+		typedef field::length::Fixed length;
 	};
 	
 	template <typename T>
