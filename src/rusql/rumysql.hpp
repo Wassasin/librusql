@@ -246,107 +246,116 @@ namespace rusql { namespace mysql {
 	template <typename T>
 	struct type_traits;
 	
-	template <typename T>
-	struct primitive_data {
-		static char const* get(T const& x){
-			return reinterpret_cast<char const*>(&x);
+	//! A collection a functions that map C++ types in one way or another to what MySQL wants (buffer, is_null, field length, etc.)
+	namespace field {
+		//! A collection of functors that get the char const* to any type of variable, to pass to MYSQL_BIND for example.
+		namespace buffer {
+			//! All primitve types (int, double, etc.) can be simply cast to a char* and be done with it.
+			struct primitive {
+				template <typename T>
+				static char const* get(T const& x){
+					return reinterpret_cast<char const*>(&x);
+				}
+			};
+			
+			struct std_string {
+				static char const* get(std::string const& x){
+					return x.c_str();
+				}
+			};
+			
+			struct char_pointer {
+				static char const* get(char const* x){
+					return x;
+				}
+			};
+			
+			//! For boost::optional, returning the pointer only if the object was set.
+			struct optional {
+				template <typename T>
+				static char const* get(boost::optional<T> const &x) {
+					if(x) {
+						return type_traits<T>::data::get(x.get());
+					} else {
+						return nullptr;
+					}
+				}
+			};
+			
+			//! For those types without data, such as boost::none_t
+			struct null {
+				template <typename T>
+				static char const* get(T const&) {
+					return nullptr;
+				}
+			};
 		}
-	};
-	
-	struct std_string_data {
-		static char const* get(std::string const& x){
-			return x.c_str();
-		}
-	};
-	
-	struct char_pointer_data {
-		static char const* get(char const* x){
-			return x;
-		}
-	};
-	
-	template <typename T>
-	struct optional_data_wrapper {
-		static char const* get(boost::optional<T> const &x) {
-			if(x) {
-				return type_traits<T>::data::get(x.get());
-			} else {
-				return nullptr;
-			}
-		}
-	};
-	
-	template <typename T>
-	struct null_data {
-		static char const* get(T const&) {
-			return nullptr;
-		}
-	};
+	}
 	
 	template <>
 	struct type_traits<uint8_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_TINY;
-		typedef primitive_data<uint8_t> data;
+		typedef field::buffer::primitive data;
 	};
 	
 	template <>
 	struct type_traits<uint16_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_SHORT;
-		typedef primitive_data<uint16_t> data;
+		typedef field::buffer::primitive data;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
-		typedef primitive_data<uint32_t> data;
+		typedef field::buffer::primitive data;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONGLONG;
-		typedef primitive_data<uint64_t> data;
+		typedef field::buffer::primitive data;
 	};
 	
 	template <>
 	struct type_traits<int32_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
-		typedef primitive_data<int32_t> data;
+		typedef field::buffer::primitive data;
 	};
 	
 	template <>
 	struct type_traits<std::string>{
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
-		typedef std_string_data data;
+		typedef field::buffer::std_string data;
 	};
 	
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
 		static constexpr enum_field_types type = type_traits<T>::type;
-		typedef optional_data_wrapper<T> data;
+		typedef field::buffer::optional data;
 	};
 	
 	template <size_t size>
 	struct type_traits<char[size]> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
-		typedef char_pointer_data data;
+		typedef field::buffer::char_pointer data;
 	};
 	
 	template <>
 	struct type_traits<char*> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
-		typedef char_pointer_data data;
+		typedef field::buffer::char_pointer data;
 	};
 	
 	template <>
 	struct type_traits<char const*> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
-		typedef char_pointer_data data;
+		typedef field::buffer::char_pointer data;
 	};
 	
 	template <>
 	struct type_traits<boost::none_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_NULL;
-		typedef null_data<boost::none_t> data;
+		typedef field::buffer::null data;
 	};
 
 	inline size_t get_field_length(double const&){
