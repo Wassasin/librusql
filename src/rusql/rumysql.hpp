@@ -81,8 +81,7 @@ namespace rusql { namespace mysql {
 
 		MYSQL database;
 
-		//TODO: rename to check_and_throw
-		inline void throw_error(std::string const & function) {
+		inline void check_and_throw(std::string const & function) {
 			if(mysql_errno(&database)){
 				char const * const error = mysql_error(&database);
 				if(error){
@@ -125,7 +124,7 @@ namespace rusql { namespace mysql {
 		{
 			if(result == nullptr){
 				if(connection->field_count() != 0){
-					connection->throw_error(__FUNCTION__);
+					connection->check_and_throw(__FUNCTION__);
 				}
 			}
 		}
@@ -446,7 +445,7 @@ namespace rusql { namespace mysql {
 			}
 		}
 		
-		inline void throw_error(std::string const & function) {
+		inline void check_and_throw(std::string const & function) {
 			char const * const error = mysql_stmt_error(statement);
 			if(error[0]){
 				throw SQLError(function, error);
