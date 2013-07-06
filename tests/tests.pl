@@ -5,7 +5,7 @@ use TAP::Harness;
 
 my @test_args = @ARGV;
 
-my @tests = qw(test_compile test_connect test_query test_placeholders test_optional test_multiconnection);
+my @tests = qw(test_compile test_connect test_query test_placeholders test_optional test_multiconnection test_signedness);
 
 my $compiled_tests_dir;
 for(qw(. tests ../tests ../build/tests)) {
