@@ -290,98 +290,111 @@ namespace rusql { namespace mysql {
 				}
 			};
 		}
+		
+		namespace length {
+			//! For fields with a fixed length, such as int, double, etc.
+			struct fixed {
+				template <typename T>
+				static size_t get(T const&){
+					return 0;
+				}
+			};
+			
+			struct string {
+				static size_t get(std::string x){
+					return x.size();
+				}
+			};
+			
+			struct optional {
+				template <typename T>
+				static size_t get(boost::optional<T> const& x){
+					if(x){
+						return type_traits<T>::length::get(*x);
+					} else {
+						return 0;
+					}
+				}
+			};
+		}
 	}
 	
 	template <>
 	struct type_traits<uint8_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_TINY;
 		typedef field::buffer::primitive data;
+		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint16_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_SHORT;
 		typedef field::buffer::primitive data;
+		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
 		typedef field::buffer::primitive data;
+		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONGLONG;
 		typedef field::buffer::primitive data;
+		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<int32_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_LONG;
 		typedef field::buffer::primitive data;
+		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<std::string>{
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
 		typedef field::buffer::std_string data;
+		typedef field::length::string length;
 	};
 	
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
 		static constexpr enum_field_types type = type_traits<T>::type;
 		typedef field::buffer::optional data;
+		typedef field::length::optional length;
 	};
 	
 	template <size_t size>
 	struct type_traits<char[size]> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
 		typedef field::buffer::char_pointer data;
+		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<char*> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
 		typedef field::buffer::char_pointer data;
+		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<char const*> {
 		static constexpr enum_field_types type = MYSQL_TYPE_STRING;
 		typedef field::buffer::char_pointer data;
+		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<boost::none_t> {
 		static constexpr enum_field_types type = MYSQL_TYPE_NULL;
 		typedef field::buffer::null data;
+		typedef field::length::fixed length;
 	};
-
-	inline size_t get_field_length(double const&){
-		return 0;
-	}
-	
-	inline size_t get_field_length(std::string const& x){
-		return x.length();
-	}
-	
-	inline size_t get_field_length(boost::none_t const&){
-		return 0;
-	}
-	
-	inline size_t get_field_length(char const * const x){
-		return std::strlen(x);
-	}
-	
-	template <typename T>
-	inline size_t get_field_length(boost::optional<T> const& x){
-		if(x){
-			return get_field_length(*x);
-		} else {
-			return 0;
-		}
-	}
 	
 	template <typename T>
 	inline bool get_field_is_null(T const&){
@@ -417,7 +430,7 @@ namespace rusql { namespace mysql {
 		// Remove constness: meaning this cannot be used with mysql_stmt_bind_result
 		b.buffer = const_cast<char*>(type_traits<T>::data::get(x));
 		b.is_null = const_cast<my_bool*>(get_field_is_null(x) ? &field_is_null : &field_is_not_null);
-		b.buffer_length = get_field_length(x);
+		b.buffer_length = type_traits<T>::length::get(x);
 		return b;
 	}
 
