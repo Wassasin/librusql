@@ -319,43 +319,20 @@ namespace rusql { namespace mysql {
 		}
 		
 		namespace type {
-			struct Tiny {
-				static constexpr enum_field_types get(uint8_t const&){
-					return MYSQL_TYPE_TINY;
-				}
-			};
-			
-			struct Short {
-				static constexpr enum_field_types get(uint16_t const&){
-					return MYSQL_TYPE_SHORT;
-				}
-			};
-			
-			struct Long {
-				static constexpr enum_field_types get(uint32_t const&){
-					return MYSQL_TYPE_LONG;
-				}
-			};
-			
-			struct LongLong {
-				static constexpr enum_field_types get(uint64_t const&){
-					return MYSQL_TYPE_LONGLONG;
-				}
-			};
-			
-			struct String {
+			template <enum_field_types type> 
+			struct Tag {
 				template <typename T>
 				static constexpr enum_field_types get(T const&){
-					return MYSQL_TYPE_STRING;
+					return type;
 				}
 			};
 			
-			struct Null {
-				template <typename T>
-				static constexpr enum_field_types get(T const&){
-					return MYSQL_TYPE_NULL;
-				}
-			};
+			typedef Tag<MYSQL_TYPE_TINY> Tiny;
+			typedef Tag<MYSQL_TYPE_SHORT> Short;
+			typedef Tag<MYSQL_TYPE_LONG> Long;
+			typedef Tag<MYSQL_TYPE_LONGLONG> LongLong;
+			typedef Tag<MYSQL_TYPE_STRING> String;
+			typedef Tag<MYSQL_TYPE_NULL> Null;
 			
 			struct Optional {
 				template <typename T>
