@@ -409,14 +409,6 @@ namespace rusql { namespace mysql {
 	}
 	
 	template <>
-	struct type_traits<uint8_t> {
-		typedef field::type::Tiny type;
-		typedef field::buffer::Primitive data;
-		typedef field::length::Fixed length;
-		typedef field::is_unsigned::Yes is_unsigned;
-	};
-	
-	template <>
 	struct type_traits<uint16_t> {
 		typedef field::type::Short type;
 		typedef field::buffer::Primitive data;
