@@ -319,60 +319,44 @@ namespace rusql { namespace mysql {
 		}
 		
 		namespace type {
-			template<typename T>
-			struct type_tag;
-			
-			template <>
-			struct type_tag<uint8_t> {
+			struct Tiny {
 				static constexpr enum_field_types get(uint8_t const&){
 					return MYSQL_TYPE_TINY;
 				}
 			};
 			
-			template <>
-			struct type_tag<uint16_t> {
+			struct Short {
 				static constexpr enum_field_types get(uint16_t const&){
 					return MYSQL_TYPE_SHORT;
 				}
 			};
 			
-			template <>
-			struct type_tag<uint32_t> {
+			struct Long {
 				static constexpr enum_field_types get(uint32_t const&){
 					return MYSQL_TYPE_LONG;
 				}
 			};
 			
-			template <>
-			struct type_tag<uint64_t> {
+			struct LongLong {
 				static constexpr enum_field_types get(uint64_t const&){
 					return MYSQL_TYPE_LONGLONG;
 				}
 			};
 			
-			template <>
-			struct type_tag<int32_t> {
-				static constexpr enum_field_types get(int32_t const&){
-					return MYSQL_TYPE_LONG;
-				}
-			};
-			
-			template <>
-			struct type_tag<std::string> {
+			struct String {
 				static constexpr enum_field_types get(std::string const&){
 					return MYSQL_TYPE_STRING;
 				}
 			};
 			
-			template <>
-			struct type_tag<boost::none_t> {
+			struct Null {
 				static constexpr enum_field_types get(boost::none_t const&){
 					return MYSQL_TYPE_NULL;
 				}
 			};
 			
-			template <typename T>
-			struct type_tag<boost::optional<T>> {
+			struct Optional {
+				template <typename T>
 				static enum_field_types get(boost::optional<T> const& x){
 					if(x){
 						return type_traits<T>::type::get(*x);
@@ -382,8 +366,8 @@ namespace rusql { namespace mysql {
 				}
 			};
 			
-			template <typename T>
-			struct type_tag<T*> {
+			struct Pointer {
+				template <typename T>
 				static enum_field_types get(T const * const x){
 					if(x){
 						return type_traits<T>::type::get(*x);
@@ -397,77 +381,77 @@ namespace rusql { namespace mysql {
 	
 	template <>
 	struct type_traits<uint8_t> {
-		typedef field::type::type_tag<uint8_t> type;
+		typedef field::type::Tiny type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint16_t> {
-		typedef field::type::type_tag<uint16_t> type;
+		typedef field::type::Short type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> {
-		typedef field::type::type_tag<uint32_t> type;
+		typedef field::type::Long type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> {
-		typedef field::type::type_tag<uint64_t> type;
+		typedef field::type::LongLong type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<int32_t> {
-		typedef field::type::type_tag<int32_t> type;
+		typedef field::type::Long type;
 		typedef field::buffer::primitive data;
 		typedef field::length::fixed length;
 	};
 	
 	template <>
 	struct type_traits<std::string>{
-		typedef field::type::type_tag<std::string> type;
+		typedef field::type::String type;
 		typedef field::buffer::std_string data;
 		typedef field::length::string length;
 	};
 	
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
-		typedef field::type::type_tag<boost::optional<T>> type;
+		typedef field::type::Optional type;
 		typedef field::buffer::optional data;
 		typedef field::length::optional length;
 	};
 	
 	template <size_t size>
 	struct type_traits<char[size]> {
-		typedef field::type::type_tag<std::string> type;
+		typedef field::type::String type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<char*> {
-		typedef field::type::type_tag<std::string> type;
+		typedef field::type::String type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<char const*> {
-		typedef field::type::type_tag<std::string> type;
+		typedef field::type::String type;
 		typedef field::buffer::char_pointer data;
 		typedef field::length::string length;
 	};
 	
 	template <>
 	struct type_traits<boost::none_t> {
-		typedef field::type::type_tag<boost::none_t> type;
+		typedef field::type::Null type;
 		typedef field::buffer::null data;
 		typedef field::length::fixed length;
 	};
