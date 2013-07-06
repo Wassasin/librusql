@@ -1,24 +1,24 @@
 #include "rumysql.hpp"
 
 namespace rusql { namespace mysql {
-	error_checker::error_checker(rusql::mysql::Connection& database_, const char* f)
+	ErrorCheckerConnection::ErrorCheckerConnection(rusql::mysql::Connection& database_, const char* f)
 	: database(database_)
 	, function(f) {
 		database.throw_error(std::string("Before ") + f);
 	}
 
-	error_checker::~error_checker() {
+	ErrorCheckerConnection::~ErrorCheckerConnection() {
 		database.throw_error(function);
 	}
 	
-	StatementErrorChecker::StatementErrorChecker(Statement& statement_, char const* f)
+	ErrorCheckerStatement::ErrorCheckerStatement(Statement& statement_, char const* f)
 	: statement(statement_)
 	, function(f)
 	{
 		statement.throw_error(std::string("Before ") + f);
 	}
 	
-	StatementErrorChecker::~StatementErrorChecker() {
+	ErrorCheckerStatement::~ErrorCheckerStatement() {
 		statement.throw_error(function);
 	}
 }}

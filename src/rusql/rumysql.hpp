@@ -37,36 +37,35 @@ namespace rusql { namespace mysql {
 	
 	struct Connection;
 
-	//TODO: Rename to ErrorChecker
-	struct error_checker {
+	struct ErrorCheckerConnection {
 		#ifndef RUSQL_IGNORE_SQL_ERRORS
 		Connection& database;
 		char const * function;
-		error_checker(Connection& database, char const * f);
-		~error_checker();
+		ErrorCheckerConnection(Connection& database, char const * f);
+		~ErrorCheckerConnection();
 		#else
-		constexpr error_checker(char const *) {}
+		constexpr ErrorCheckerConnection(char const *) {}
 		#endif
 	};
 	
 	struct Statement;
-	struct StatementErrorChecker {
+	struct ErrorCheckerStatement {
 		#ifndef RUSQL_IGNORE_SQL_ERRORS
 		Statement& statement;
 		char const * function;
-		StatementErrorChecker(Statement& statement, char const * f);
-		~StatementErrorChecker();
+		ErrorCheckerStatement(Statement& statement, char const * f);
+		~ErrorCheckerStatement();
 		#else
-		constexpr error_checker(char const *) {}
+		constexpr ErrorCheckerConnection(char const *) {}
 		#endif
 	};
 	
 	// Generic wrapper for error-handling
-	#define RUSQL_WRAP(name, mysql, this_name, connection_name, error_checker_type) \
+	#define RUSQL_WRAP(name, mysql, this_name, connection_name, ErrorCheckerConnection_type) \
 	template<typename... Args> \
 	inline decltype(mysql(this_name, std::declval<Args>()...)) \
 	name(Args && ... args) { \
-		error_checker_type c{connection_name, #mysql " (mysql::" #name ")"}; \
+		ErrorCheckerConnection_type c{connection_name, #mysql " (mysql::" #name ")"}; \
 		return mysql(this_name, std::forward<Args>(args)...); \
 	}
 
@@ -92,7 +91,7 @@ namespace rusql { namespace mysql {
 			}
 		}
 
-		#define CONNECTION_WRAP(name, function) RUSQL_WRAP(name, function, &database, *this, error_checker)
+		#define CONNECTION_WRAP(name, function) RUSQL_WRAP(name, function, &database, *this, ErrorCheckerConnection)
 		CONNECTION_WRAP(init, mysql_init)
 		CONNECTION_WRAP(ping, mysql_ping)
 		CONNECTION_WRAP(use_result, mysql_use_result)
@@ -101,12 +100,12 @@ namespace rusql { namespace mysql {
 		#undef CONNECTION_WRAP
 		
 		inline MYSQL* connect(std::string const host, std::string const user, std::string const password, std::string const database_, int const port, boost::optional<std::string> const unix_socket, unsigned long const client_flag){
-			error_checker c(*this, __FUNCTION__);
+			ErrorCheckerConnection c(*this, __FUNCTION__);
 			return mysql_real_connect(&database, host.c_str(), user.c_str(), password.c_str(), database_.c_str(), port, (unix_socket ? unix_socket->c_str() : NULL), client_flag);
 		}
 		
 		inline int query(std::string const query_string) {
-			error_checker c(*this, __FUNCTION__);
+			ErrorCheckerConnection c(*this, __FUNCTION__);
 			return mysql_real_query(&database, query_string.c_str(), query_string.length());
 		}
 	};
@@ -220,7 +219,7 @@ namespace rusql { namespace mysql {
 		
 		MYSQL_ROW fetch_row() {
 			{
-				error_checker e(*connection, __FUNCTION__);
+				ErrorCheckerConnection e(*connection, __FUNCTION__);
 				current_row = mysql_fetch_row(result);
 			}
 			
@@ -235,7 +234,7 @@ namespace rusql { namespace mysql {
 			return current_row;
 		}
 
-		#define RESULT_WRAP(name, function) RUSQL_WRAP(name, function, result, *connection, error_checker)
+		#define RESULT_WRAP(name, function) RUSQL_WRAP(name, function, result, *connection, ErrorCheckerConnection)
 		RESULT_WRAP(fetch_field, mysql_fetch_field)
 		RESULT_WRAP(fetch_lengths, mysql_fetch_lengths);
 		RESULT_WRAP(num_fields, mysql_num_fields);
@@ -487,9 +486,9 @@ namespace rusql { namespace mysql {
 			return MySQLUseResult(&connection);
 		}
 
-		#define STATEMENT_WRAP(name, function) RUSQL_WRAP(name, function, statement, *this, StatementErrorChecker)
+		#define STATEMENT_WRAP(name, function) RUSQL_WRAP(name, function, statement, *this, ErrorCheckerStatement)
 		int prepare(std::string const q){
-			StatementErrorChecker e(*this, __FUNCTION__);
+			ErrorCheckerStatement e(*this, __FUNCTION__);
 			return mysql_stmt_prepare(statement, q.c_str(), q.length());
 		}
 
@@ -499,7 +498,7 @@ namespace rusql { namespace mysql {
 		#undef STATEMENT_WRAP
 
 	private:
-		#define STATEMENT_WRAP_CONNECTION(name, function) RUSQL_WRAP(name, function, statement, connection, error_checker)
+		#define STATEMENT_WRAP_CONNECTION(name, function) RUSQL_WRAP(name, function, statement, connection, ErrorCheckerConnection)
 		STATEMENT_WRAP_CONNECTION(close, mysql_stmt_close)
 		#undef STATMENT_WRAP_CONNECTION
 	};

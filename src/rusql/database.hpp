@@ -18,7 +18,6 @@ namespace rusql {
 			{}
 		};
 
-
 		Database (ConstructionInfo const& rh)
 		: info (rh) {
 		}
