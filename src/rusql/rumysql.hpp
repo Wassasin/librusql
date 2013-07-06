@@ -385,44 +385,36 @@ namespace rusql { namespace mysql {
 		}
 	}
 	
+	struct Primitive { typedef field::buffer::Primitive data; };
+	struct Fixed     { typedef field::length::Fixed length; };
+	struct Unsigned  { typedef field::is_unsigned::Yes is_unsigned; };
+	struct Signed    { typedef field::is_unsigned::No is_unsigned; };
+	
 	template <>
-	struct type_traits<uint16_t> {
+	struct type_traits<uint16_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::Short type;
-		typedef field::buffer::Primitive data;
-		typedef field::length::Fixed length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<uint32_t> {
+	struct type_traits<uint32_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::Long type;
-		typedef field::buffer::Primitive data;
-		typedef field::length::Fixed length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<uint64_t> {
+	struct type_traits<uint64_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::LongLong type;
-		typedef field::buffer::Primitive data;
-		typedef field::length::Fixed length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<int32_t> {
+	struct type_traits<int32_t> : Primitive, Fixed, Signed {
 		typedef field::type::Long type;
-		typedef field::buffer::Primitive data;
-		typedef field::length::Fixed length;
-		typedef field::is_unsigned::No is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<std::string>{
+	struct type_traits<std::string> : Unsigned {
 		typedef field::type::String type;
 		typedef field::buffer::String data;
 		typedef field::length::String length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <typename T>
@@ -434,35 +426,31 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <size_t size>
-	struct type_traits<char[size]> {
+	struct type_traits<char[size]> : Unsigned {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<char*> {
+	struct type_traits<char*> : Unsigned {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<char const*> {
+	struct type_traits<char const*> : Unsigned {
 		typedef field::type::String type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <>
-	struct type_traits<boost::none_t> {
+	struct type_traits<boost::none_t> : Unsigned {
 		typedef field::type::Null type;
 		typedef field::buffer::Null data;
 		typedef field::length::Fixed length;
-		typedef field::is_unsigned::Yes is_unsigned;
 	};
 	
 	template <typename T>
