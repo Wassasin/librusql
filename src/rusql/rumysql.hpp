@@ -406,8 +406,23 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <>
+	struct type_traits<int16_t> : Primitive, Fixed, Signed {
+		typedef field::type::Short type;
+	};
+
+	template <>
 	struct type_traits<int32_t> : Primitive, Fixed, Signed {
 		typedef field::type::Long type;
+	};
+
+	template <>
+	struct type_traits<int64_t> : Primitive, Fixed, Signed {
+		typedef field::type::LongLong type;
+	};
+
+	template <>
+	struct type_traits<bool> : Primitive, Fixed, Unsigned {
+		typedef field::type::Tiny type;
 	};
 	
 	template <>
