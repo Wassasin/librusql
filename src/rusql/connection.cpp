@@ -11,14 +11,36 @@ namespace rusql {
 
 	//! Connects with the database, disconnects the previous connection, if there was one.
 	void Connection::connect(){
-		connection.connect(
-			database->info.host,
-			database->info.user,
-			database->info.password,
-			database->info.database,
-			0,
-			boost::none,
-			0
-		);
+		typedef Database::ConstructionInfo::ConstructionInfoType CIType;
+
+		switch(database->info.type) {
+		case CIType::TCP:
+			connection.connect(
+				database->info.host,
+				database->info.port,
+				database->info.user,
+				database->info.password,
+				database->info.database,
+				0);
+			break;
+
+		case CIType::UNIX:
+			connection.connect(
+				database->info.unix_path,
+				database->info.user,
+				database->info.password,
+				database->info.database,
+				0);
+			break;
+
+		case CIType::Embedded:
+			connection.connect(
+				database->info.database,
+				0);
+			break;
+
+		default:
+			assert(!"Unreachable code");
+		}
 	}
 }

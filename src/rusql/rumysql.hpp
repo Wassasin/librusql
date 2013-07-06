@@ -98,9 +98,19 @@ namespace rusql { namespace mysql {
 		CONNECTION_WRAP(stmt_init, mysql_stmt_init);
 		#undef CONNECTION_WRAP
 		
-		inline MYSQL* connect(std::string const host, std::string const user, std::string const password, std::string const database_, int const port, boost::optional<std::string> const unix_socket, unsigned long const client_flag){
+		inline MYSQL* connect(std::string const host, int const port, std::string const user, std::string const password, std::string const database_, unsigned long const client_flag){
 			ErrorCheckerConnection c(*this, __FUNCTION__);
-			return mysql_real_connect(&database, host.c_str(), user.c_str(), password.c_str(), database_.c_str(), port, (unix_socket ? unix_socket->c_str() : NULL), client_flag);
+			return mysql_real_connect(&database, host.c_str(), user.c_str(), password.c_str(), database_.c_str(), port, NULL, client_flag);
+		}
+		
+		inline MYSQL* connect(std::string const unix_socket, std::string const user, std::string const password, std::string const database_, unsigned long const client_flag){
+			ErrorCheckerConnection c(*this, __FUNCTION__);
+			return mysql_real_connect(&database, NULL, user.c_str(), password.c_str(), database_.c_str(), 0, unix_socket.c_str(), client_flag);
+		}
+		
+		inline MYSQL* connect(std::string const database_, unsigned long const client_flag){
+			ErrorCheckerConnection c(*this, __FUNCTION__);
+			return mysql_real_connect(&database, NULL, NULL, NULL, database_.c_str(), 0, NULL, client_flag);
 		}
 		
 		inline int query(std::string const query_string) {

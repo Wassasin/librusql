@@ -58,6 +58,11 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_library(rusql ${RUSQL_SOURCES})
 target_link_libraries(rusql ${MYSQL_LIBRARIES} ${Boost_LIBRARIES})
 
+if(MYSQLd_FOUND)
+  add_library(rusql_embedded ${RUSQL_SOURCES})
+  target_link_libraries(rusql_embedded ${MYSQLd_LIBRARIES} ${Boost_LIBRARIES})
+endif()
+
 install(FILES ${RUSQL_HEADERS} DESTINATION include/rusql)
 install(FILES
 	cmake/modules/FindMYSQL.cmake
