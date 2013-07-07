@@ -187,11 +187,12 @@ namespace rusql { namespace mysql {
 
 			MYSQL_FIELD* field = nullptr;
 			size_t index = 0;
+			field_seek(0);
 			while((field = fetch_field())){
-				++index;
 				if(field->name == column_name){
 					return index;
 				}
+				++index;
 			}
 			
 			throw ColumnNotFound("Column '" + column_name + "' not found");
@@ -240,6 +241,11 @@ namespace rusql { namespace mysql {
 			}*/
 			
 			return current_row;
+		}
+
+		MYSQL_FIELD_OFFSET field_seek(MYSQL_FIELD_OFFSET offset) {
+			ErrorCheckerConnection e(*connection, __FUNCTION__);
+			return mysql_field_seek(result, offset);
 		}
 
 		#define RESULT_WRAP(name, function) RUSQL_WRAP(name, function, result, *connection, ErrorCheckerConnection)

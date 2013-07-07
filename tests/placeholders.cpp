@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(24);
+	test_init(30);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -18,6 +18,23 @@ int main(int argc, char *argv[]) {
 		res.next();
 		test(res, "three results");
 		test(res.get_string(0) == "c", "c was inserted");
+		res.next();
+		test(!res, "not more than three results");
+	} catch(std::exception &e) {
+		diag(e);
+	}
+	test_finish_try();
+
+	test_start_try(6);
+	try {
+		auto res = db->query("SELECT * FROM rusqltest");
+		test(res.get_string("value") == "a", "a was inserted");
+		res.next();
+		test(res, "two results");
+		test(res.get_string("value") == "b", "b was inserted");
+		res.next();
+		test(res, "three results");
+		test(res.get_string("value") == "c", "c was inserted");
 		res.next();
 		test(!res, "not more than three results");
 	} catch(std::exception &e) {
