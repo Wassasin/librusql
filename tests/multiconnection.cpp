@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
 			test(rsOne,  "connection one still has results");
 			test(rsTwo,  "connection two still has results");
 			test(rsProd, "connection three still has results");
-			int one  = rsOne.get_uint64(0);
-			int two  = rsTwo.get_uint64(0);
-			int prod = rsProd.get_uint64(0);
+			int one  = rsOne.get_uint64("one");
+			int two  = rsTwo.get_uint64("two");
+			int prod = rsProd.get_uint64("product");
 			test(one * two == prod, "connections are simultaneous");
 			rsOne.next();
 			rsTwo.next();

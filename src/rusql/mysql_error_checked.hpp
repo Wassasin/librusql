@@ -64,6 +64,9 @@ namespace rusql { namespace mysql {
 	MYSQL_FIELD* fetch_field(MYSQL_RES* result);
 	
 	//! Doesn't return errors
+	MYSQL_FIELD_OFFSET field_seek(MYSQL_RES* result, MYSQL_FIELD_OFFSET offset);
+	
+	//! Doesn't return errors
 	unsigned long* fetch_lengths(MYSQL_RES* result);
 	
 	//! Doesn't return errors

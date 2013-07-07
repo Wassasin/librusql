@@ -135,6 +135,8 @@ namespace rusql { namespace mysql {
 
 			MYSQL_FIELD* field = nullptr;
 			size_t index = 0;
+			rusql::mysql::field_seek(result, 0);
+
 			while((field = rusql::mysql::fetch_field(result))){
 				if(field->name == column_name){
 					return index;

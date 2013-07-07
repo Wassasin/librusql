@@ -69,7 +69,6 @@ namespace rusql { namespace mysql {
 		return mysql_stmt_init(connection);
 	}
 	
-	//! There's no difference for us between connect and "real_connect", so we just have one version: connect.
 	MYSQL* connect(
 		MYSQL* connection,
 		boost::optional<std::string const> host,
@@ -89,12 +88,14 @@ namespace rusql { namespace mysql {
 		return mysql_real_query(connection, query.c_str(), query.length());
 	}
 	
-	//! Doesn't return errors
 	MYSQL_FIELD* fetch_field(MYSQL_RES* result) {
 		return mysql_fetch_field(result);
 	}
 	
-	//! Doesn't return errors
+	MYSQL_FIELD_OFFSET field_seek(MYSQL_RES* result, MYSQL_FIELD_OFFSET offset){
+		return mysql_field_seek(result, offset);
+	}
+	
 	unsigned long* fetch_lengths(MYSQL_RES* result){
 		auto const r = mysql_fetch_lengths(result);
 		if(r == nullptr){
@@ -104,23 +105,19 @@ namespace rusql { namespace mysql {
 		return r;
 	}
 	
-	//! Doesn't return errors
 	unsigned int num_fields(MYSQL_RES* result) {
 		return mysql_num_fields(result);
 	}
 	
-	//! Doesn't return errors
 	void free_result(MYSQL_RES* result){
 		mysql_free_result(result);
 	}
 	
-	//! Needs a connection for error checking
 	MYSQL_ROW fetch_row(MYSQL* connection, MYSQL_RES* result){
 		CHECK;
 		return mysql_fetch_row(result);
 	}
 	
-	//! Doesn't return errors
 	unsigned long stmt_param_count(MYSQL_STMT* statement){
 		return mysql_stmt_param_count(statement);
 	}
