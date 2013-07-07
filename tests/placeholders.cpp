@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(30);
+	test_init(31);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -20,6 +20,16 @@ int main(int argc, char *argv[]) {
 		test(res.get_string(0) == "c", "c was inserted");
 		res.next();
 		test(!res, "not more than three results");
+	} catch(std::exception &e) {
+		diag(e);
+	}
+	test_finish_try();
+
+	test_start_try(1);
+	try {
+		// bound query without results
+		auto res = db->query("SELECT * FROM rusqltest WHERE value=?", "foo'barbaz");
+		test(!res, "no results for query");
 	} catch(std::exception &e) {
 		diag(e);
 	}
