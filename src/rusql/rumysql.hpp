@@ -5,73 +5,28 @@
 #include <string>
 #include <utility>
 
-#include <mysql/mysql.h>
-
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
+
+#include <mysql/mysql.h>
 
 #define INFORMATION __FILE__ << ":" << __LINE__ << "(" << __FUNCTION__ << ")"
 #define COUT std::cout << INFORMATION << "\n"
 #define CERR std::cerr << INFORMATION << "\n"
 
+#include "mysql_type_traits.hpp"
+#include "mysql_error_checked.hpp"
 
 namespace rusql { namespace mysql {
-	struct SQLError : std::runtime_error {
-		SQLError(std::string const & function, std::string const & s)
-		: std::runtime_error(function + ": " + s)
-		{}
-	};
+	struct ColumnNotFound : SQLError { ColumnNotFound(std::string const msg) : SQLError(msg) {} };
+	struct TooFewBoundParameters : SQLError { TooFewBoundParameters(std::string const msg) : SQLError(msg) {} };
+	struct TooManyBoundParameters : SQLError { TooManyBoundParameters(std::string const msg) : SQLError(msg) {} };
 	
-	struct ColumnNotFound : std::runtime_error {
-		ColumnNotFound(std::string const msg) : std::runtime_error(msg) {}
-	};
-	
-	struct TooFewBoundParameters : std::runtime_error {
-		TooFewBoundParameters(std::string const msg) : std::runtime_error(msg) {}
-	};
-	
-	struct TooManyBoundParameters : std::runtime_error {
-		TooManyBoundParameters(std::string const msg) : std::runtime_error(msg) {}
-	};
-	
-	struct Connection;
-
-	struct ErrorCheckerConnection {
-		#ifndef RUSQL_IGNORE_SQL_ERRORS
-		Connection& database;
-		char const * function;
-		ErrorCheckerConnection(Connection& database, char const * f);
-		~ErrorCheckerConnection();
-		#else
-		constexpr ErrorCheckerConnection(char const *) {}
-		#endif
-	};
-	
-	struct Statement;
-	struct ErrorCheckerStatement {
-		#ifndef RUSQL_IGNORE_SQL_ERRORS
-		Statement& statement;
-		char const * function;
-		ErrorCheckerStatement(Statement& statement, char const * f);
-		~ErrorCheckerStatement();
-		#else
-		constexpr ErrorCheckerConnection(char const *) {}
-		#endif
-	};
-	
-	// Generic wrapper for error-handling
-	#define RUSQL_WRAP(name, mysql, this_name, connection_name, ErrorCheckerConnection_type) \
-	template<typename... Args> \
-	inline decltype(mysql(this_name, std::declval<Args>()...)) \
-	name(Args && ... args) { \
-		ErrorCheckerConnection_type c{connection_name, #mysql " (mysql::" #name ")"}; \
-		return mysql(this_name, std::forward<Args>(args)...); \
-	}
-
+	//! A wrapper around MYSQL (the struct), symbolizing a connection.
 	struct Connection : boost::noncopyable {
-		Connection()
-		{
+		Connection() {
+			memset(&database, 0, sizeof(MYSQL));
 			init();
 		}
 
@@ -80,46 +35,45 @@ namespace rusql { namespace mysql {
 		{}
 
 		MYSQL database;
-
-		inline void check_and_throw(std::string const & function) {
-			if(mysql_errno(&database)){
-				char const * const error = mysql_error(&database);
-				if(error){
-					throw SQLError(function, error);
-				}
-			}
+		
+		inline MYSQL* init(){
+			return rusql::mysql::init(&database);
 		}
-
-		#define CONNECTION_WRAP(name, function) RUSQL_WRAP(name, function, &database, *this, ErrorCheckerConnection)
-		CONNECTION_WRAP(init, mysql_init)
-		CONNECTION_WRAP(ping, mysql_ping)
-		CONNECTION_WRAP(use_result, mysql_use_result)
-		CONNECTION_WRAP(field_count, mysql_field_count);
-		CONNECTION_WRAP(stmt_init, mysql_stmt_init);
-		#undef CONNECTION_WRAP
+		
+		inline int ping(){
+			return rusql::mysql::ping(&database);
+		}
+		
+		inline MYSQL_RES* use_result(){
+			return rusql::mysql::use_result(&database);
+		}
+		
+		inline size_t field_count(){
+			return rusql::mysql::field_count(&database);
+		}
+		
+		inline MYSQL_STMT* stmt_init(){
+			return rusql::mysql::stmt_init(&database);
+		}
 		
 		inline MYSQL* connect(std::string const host, int const port, std::string const user, std::string const password, std::string const database_, unsigned long const client_flag){
-			ErrorCheckerConnection c(*this, __FUNCTION__);
-			return mysql_real_connect(&database, host.c_str(), user.c_str(), password.c_str(), database_.c_str(), port, NULL, client_flag);
+			return rusql::mysql::connect(&database, host, user, password, database_, port, boost::none, client_flag);
 		}
 		
 		inline MYSQL* connect(std::string const unix_socket, std::string const user, std::string const password, std::string const database_, unsigned long const client_flag){
-			ErrorCheckerConnection c(*this, __FUNCTION__);
-			return mysql_real_connect(&database, NULL, user.c_str(), password.c_str(), database_.c_str(), 0, unix_socket.c_str(), client_flag);
+			return rusql::mysql::connect(&database, boost::none, user, password, database_, 0, unix_socket, client_flag);
 		}
 		
 		inline MYSQL* connect(std::string const database_, unsigned long const client_flag){
-			ErrorCheckerConnection c(*this, __FUNCTION__);
-			return mysql_real_connect(&database, NULL, NULL, NULL, database_.c_str(), 0, NULL, client_flag);
+			return rusql::mysql::connect(&database, boost::none, boost::none, boost::none, database_, 0, boost::none, client_flag);
 		}
 		
 		inline int query(std::string const query_string) {
-			ErrorCheckerConnection c(*this, __FUNCTION__);
-			return mysql_real_query(&database, query_string.c_str(), query_string.length());
+			return rusql::mysql::query(&database, query_string);
 		}
 	};
 	
-	//! A minimalistic wrapper around MYSQL_RES, in "mysql_use_result"-mode. For a wrapper around "mysql_store_result", use MySQLStoreResult.
+	//! A  wrapper around MYSQL_RES, in "mysql_use_result"-mode. For a wrapper around "mysql_store_result", use MySQLStoreResult (doesn't exist at the moment of writing, sorry).
 	//! Read the documentation of mysql for pros and cons of use versus store.
 	//! Throws on:
 	//! - Any function called that returns an error code
@@ -130,13 +84,7 @@ namespace rusql { namespace mysql {
 		: connection(connection_)
 		, result(connection->use_result())
 		, current_row(nullptr)
-		{
-			if(result == nullptr){
-				if(connection->field_count() != 0){
-					connection->check_and_throw(__FUNCTION__);
-				}
-			}
-		}
+		{}
 		
 		UseResult(UseResult&& x)
 		: connection(x.connection)
@@ -173,7 +121,7 @@ namespace rusql { namespace mysql {
 		void close(){
 			assert(result != nullptr);
 			while(fetch_row() != nullptr);
-			free_result();
+			rusql::mysql::free_result(result);
 			result = nullptr;
 		}
 		
@@ -187,11 +135,11 @@ namespace rusql { namespace mysql {
 
 			MYSQL_FIELD* field = nullptr;
 			size_t index = 0;
-			while((field = fetch_field())){
-				++index;
+			while((field = rusql::mysql::fetch_field(result))){
 				if(field->name == column_name){
 					return index;
 				}
+				++index;
 			}
 			
 			throw ColumnNotFound("Column '" + column_name + "' not found");
@@ -214,7 +162,7 @@ namespace rusql { namespace mysql {
 		char* raw_get(size_t const index){
 			assert(result != nullptr);
 			assert(current_row != nullptr);
-			assert(index < num_fields());
+			assert(index < rusql::mysql::num_fields(result));
 
 			return current_row[index];
 		}
@@ -226,256 +174,19 @@ namespace rusql { namespace mysql {
 		}
 		
 		MYSQL_ROW fetch_row() {
-			{
-				ErrorCheckerConnection e(*connection, __FUNCTION__);
-				current_row = mysql_fetch_row(result);
-			}
+			current_row = rusql::mysql::fetch_row(&connection->database, result);
 			
-			/*if(current_row != nullptr){
-				auto* lengths = fetch_lengths();
-				auto const n = num_fields();
-				for(size_t i = 0; i < n; ++i){
-					COUT << "Column " << i << " is " << lengths[i] << " bytes containing: " << std::string(&current_row[i][0], &current_row[i][lengths[i]]) << std::endl;
-				}
-			}*/
+			// Output the fetched row.
+// 			if(current_row != nullptr){
+// 				auto* lengths = fetch_lengths();
+// 				auto const n = num_fields();
+// 				for(size_t i = 0; i < n; ++i){
+// 					COUT << "Column " << i << " is " << lengths[i] << " bytes containing: " << std::string(&current_row[i][0], &current_row[i][lengths[i]]) << std::endl;
+// 				}
+// 			}
 			
 			return current_row;
 		}
-
-		#define RESULT_WRAP(name, function) RUSQL_WRAP(name, function, result, *connection, ErrorCheckerConnection)
-		RESULT_WRAP(fetch_field, mysql_fetch_field)
-		RESULT_WRAP(fetch_lengths, mysql_fetch_lengths);
-		RESULT_WRAP(num_fields, mysql_num_fields);
-		
-	private:
-		RESULT_WRAP(free_result, mysql_free_result) // Call close(), which also makes sure all rows are fetched.
-		
-		#undef RESULT_WRAP
-	};
-	
-	template <typename T>
-	struct type_traits;
-	
-	//! A collection a functions that map C++ types in one way or another to what MySQL wants (buffer, is_null, field length, etc.)
-	namespace field {
-		//! A collection of functors that get the char const* to any type of variable, to pass to MYSQL_BIND for example.
-		namespace buffer {
-			//! All primitve types (int, double, etc.) can be simply cast to a char* and be done with it.
-			struct Primitive {
-				template <typename T>
-				static char const* get(T const& x){
-					return reinterpret_cast<char const*>(&x);
-				}
-			};
-			
-			struct String {
-				static char const* get(std::string const& x){
-					return x.c_str();
-				}
-			};
-			
-			struct CharPointer {
-				static char const* get(char const* x){
-					return x;
-				}
-			};
-			
-			//! For boost::optional, returning the pointer only if the object was set.
-			struct Optional {
-				template <typename T>
-				static char const* get(boost::optional<T> const &x) {
-					if(x) {
-						return type_traits<T>::data::get(x.get());
-					} else {
-						return nullptr;
-					}
-				}
-			};
-			
-			//! For those types without data, such as boost::none_t
-			struct Null {
-				template <typename T>
-				static char const* get(T const&) {
-					return nullptr;
-				}
-			};
-		}
-		
-		namespace length {
-			//! For fields with a fixed length, such as int, double, etc.
-			struct Fixed {
-				template <typename T>
-				static size_t get(T const&){
-					return 0;
-				}
-			};
-			
-			struct String {
-				static size_t get(std::string x){
-					return x.size();
-				}
-			};
-			
-			struct Optional {
-				template <typename T>
-				static size_t get(boost::optional<T> const& x){
-					if(x){
-						return type_traits<T>::length::get(*x);
-					} else {
-						return 0;
-					}
-				}
-			};
-		}
-		
-		namespace type {
-			template <enum_field_types type> 
-			struct Tag {
-				template <typename T>
-				static constexpr enum_field_types get(T const&){
-					return type;
-				}
-			};
-			
-			typedef Tag<MYSQL_TYPE_TINY> Tiny;
-			typedef Tag<MYSQL_TYPE_SHORT> Short;
-			typedef Tag<MYSQL_TYPE_LONG> Long;
-			typedef Tag<MYSQL_TYPE_LONGLONG> LongLong;
-			typedef Tag<MYSQL_TYPE_STRING> String;
-			typedef Tag<MYSQL_TYPE_NULL> Null;
-			
-			struct Optional {
-				template <typename T>
-				static enum_field_types get(boost::optional<T> const& x){
-					if(x){
-						return type_traits<T>::type::get(*x);
-					} else {
-						return MYSQL_TYPE_NULL;
-					}
-				}
-			};
-			
-			struct Pointer {
-				template <typename T>
-				static enum_field_types get(T const * const x){
-					if(x){
-						return type_traits<T>::type::get(*x);
-					} else {
-						return MYSQL_TYPE_NULL;
-					}
-				}
-			};
-		}
-		
-		namespace is_unsigned {
-			struct No {
-				template <typename T>
-				static constexpr bool get(T const&){
-					return false;
-				}
-			};
-			
-			struct Yes {
-				template <typename T>
-				static constexpr bool get(T const&){
-					return true;
-				}
-			};
-			
-			struct Optional {
-				template <typename T>
-				static bool get(boost::optional<T> const& x){
-					if(x){
-						return type_traits<T>::is_unsigned::get(*x);
-					} else {
-						return false;
-					}
-				}
-			};
-		}
-	}
-	
-	struct Primitive { typedef field::buffer::Primitive data; };
-	struct Fixed     { typedef field::length::Fixed length; };
-	struct Unsigned  { typedef field::is_unsigned::Yes is_unsigned; };
-	struct Signed    { typedef field::is_unsigned::No is_unsigned; };
-	
-	template <>
-	struct type_traits<uint16_t> : Primitive, Fixed, Unsigned {
-		typedef field::type::Short type;
-	};
-	
-	template <>
-	struct type_traits<uint32_t> : Primitive, Fixed, Unsigned {
-		typedef field::type::Long type;
-	};
-	
-	template <>
-	struct type_traits<uint64_t> : Primitive, Fixed, Unsigned {
-		typedef field::type::LongLong type;
-	};
-	
-	template <>
-	struct type_traits<int16_t> : Primitive, Fixed, Signed {
-		typedef field::type::Short type;
-	};
-
-	template <>
-	struct type_traits<int32_t> : Primitive, Fixed, Signed {
-		typedef field::type::Long type;
-	};
-
-	template <>
-	struct type_traits<int64_t> : Primitive, Fixed, Signed {
-		typedef field::type::LongLong type;
-	};
-
-	template <>
-	struct type_traits<bool> : Primitive, Fixed, Unsigned {
-		typedef field::type::Tiny type;
-	};
-	
-	template <>
-	struct type_traits<std::string> : Unsigned {
-		typedef field::type::String type;
-		typedef field::buffer::String data;
-		typedef field::length::String length;
-	};
-	
-	template <typename T>
-	struct type_traits<boost::optional<T>> {
-		typedef field::type::Optional type;
-		typedef field::buffer::Optional data;
-		typedef field::length::Optional length;
-		typedef field::is_unsigned::Optional is_unsigned;
-	};
-	
-	template <size_t size>
-	struct type_traits<char[size]> : Unsigned {
-		typedef field::type::String type;
-		typedef field::buffer::CharPointer data;
-		typedef field::length::String length;
-	};
-	
-	template <>
-	struct type_traits<char*> : Unsigned {
-		typedef field::type::String type;
-		typedef field::buffer::CharPointer data;
-		typedef field::length::String length;
-	};
-	
-	template <>
-	struct type_traits<char const*> : Unsigned {
-		typedef field::type::String type;
-		typedef field::buffer::CharPointer data;
-		typedef field::length::String length;
-	};
-	
-	template <>
-	struct type_traits<boost::none_t> : Unsigned {
-		typedef field::type::Null type;
-		typedef field::buffer::Null data;
-		typedef field::length::Fixed length;
 	};
 	
 	template <typename T>
@@ -562,20 +273,26 @@ namespace rusql { namespace mysql {
 			return UseResult(&connection);
 		}
 
-		#define STATEMENT_WRAP(name, function) RUSQL_WRAP(name, function, statement, *this, ErrorCheckerStatement)
 		int prepare(std::string const q){
-			ErrorCheckerStatement e(*this, __FUNCTION__);
-			return mysql_stmt_prepare(statement, q.c_str(), q.length());
+			return rusql::mysql::stmt_prepare(statement, q);
+		}
+		
+		size_t param_count(){
+			return rusql::mysql::stmt_param_count(statement);
 		}
 
-		STATEMENT_WRAP(param_count, mysql_stmt_param_count)
-		STATEMENT_WRAP(bind_param, mysql_stmt_bind_param)
-		STATEMENT_WRAP(execute, mysql_stmt_execute)
-		#undef STATEMENT_WRAP
+		my_bool bind_param(MYSQL_BIND* binds){
+			return rusql::mysql::stmt_bind_param(statement, binds);
+		}
 
-	private:
-		#define STATEMENT_WRAP_CONNECTION(name, function) RUSQL_WRAP(name, function, statement, connection, ErrorCheckerConnection)
-		STATEMENT_WRAP_CONNECTION(close, mysql_stmt_close)
-		#undef STATMENT_WRAP_CONNECTION
+		int execute(){
+			return rusql::mysql::stmt_execute(statement);
+		}
+		
+		my_bool close(){
+			auto const result = rusql::mysql::stmt_close(statement);
+			statement = nullptr;
+			return result;
+		}
 	};
 }}
