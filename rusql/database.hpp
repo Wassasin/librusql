@@ -67,18 +67,13 @@ namespace rusql {
 			return num;
 		}
 
-		ResultSet query (std::string const q) {
-			return get_connection().query (q);
+		ResultSet query(std::string const q) {
+			return get_connection().query(q);
 		}
 
 		template <typename ... T>
-		ResultSet query (std::string const q, T const& ... args) {
-			return get_connection().prepare (q).bind (args ...).query();
-		}
-
-		template <typename ... T>
-		void execute (std::string const q, T const& ... args) {
-			return get_connection().prepare (q).bind (args ...).execute();
+		void execute(std::string const q, T const& ... args) {
+			return get_connection().prepare(q).bind_parameters(args ...).execute();
 		}
 		
 		void ping(){

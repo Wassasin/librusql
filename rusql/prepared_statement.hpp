@@ -12,16 +12,12 @@ namespace rusql {
 		: statement (std::move(statement_))
 		{}
 
-		ResultSet query() {
-			return std::move(statement.bind_execute());
-		}
-
 		void execute() {
 			statement.execute();
 		}
 
 		template <typename ... T>
-		PreparedStatement& bind (T const& ... values) {
+		PreparedStatement& bind_parameters(T const& ... values) {
 			statement.bind(values ... );
 			return *this;
 		}
