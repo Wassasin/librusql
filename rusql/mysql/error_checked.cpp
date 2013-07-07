@@ -1,4 +1,4 @@
-#include "mysql_error_checked.hpp"
+#include "error_checked.hpp"
 
 #include <string>
 

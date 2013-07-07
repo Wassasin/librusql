@@ -1,7 +1,5 @@
 #include "rusql.hpp"
 
-#include <mysql_driver.h>
-
 namespace rusql {
 	Connection::Connection(std::shared_ptr< Database > database_)
 	: database(database_)

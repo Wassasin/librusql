@@ -2,10 +2,9 @@
 
 #include <memory>
 
-#include <cppconn/prepared_statement.h>
-
 #include <boost/optional.hpp>
-#include "rumysql.hpp"
+
+#include "mysql/mysql.hpp"
 
 namespace rusql {
 	struct PreparedStatement {

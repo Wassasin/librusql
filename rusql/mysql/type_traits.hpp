@@ -1,3 +1,9 @@
+#pragma once
+
+#include <string>
+
+#include <boost/optional.hpp>
+
 namespace rusql { namespace mysql {
 	template <typename T>
 	struct type_traits;

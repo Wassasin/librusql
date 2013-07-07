@@ -6,7 +6,8 @@
 
 #include <cppconn/resultset.h>
 #include <cppconn/exception.h>
-#include "rumysql.hpp"
+
+#include "mysql/mysql.hpp"
 
 namespace rusql {
 

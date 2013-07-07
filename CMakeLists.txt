@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 project(rusql)
 
-include_directories("${PROJECT_BINARY_DIR}")
-
 include(cmake/set_system_include_flag.cmake)
 include(cmake/address_sanitizer.cmake)
 
@@ -45,30 +43,7 @@ include(cmake/join.cmake)
 join("${warnings}" " " warnings)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warnings}")
 
-file(GLOB_RECURSE RUSQL_HEADERS src/rusql/*.hpp)
-file(GLOB_RECURSE RUSQL_SOURCES src/rusql/*.cpp)
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules")
 
-find_package(MYSQL REQUIRED)
-include_directories(${MYSQL_INCLUDE_DIRS})
-find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-
-add_library(rusql ${RUSQL_SOURCES})
-target_link_libraries(rusql ${MYSQL_LIBRARIES} ${Boost_LIBRARIES})
-
-if(MYSQLd_FOUND)
-  add_library(rusql_embedded ${RUSQL_SOURCES})
-  target_link_libraries(rusql_embedded ${MYSQLd_LIBRARIES} ${Boost_LIBRARIES})
-endif()
-
-install(FILES ${RUSQL_HEADERS} DESTINATION include/rusql)
-install(FILES
-	cmake/modules/FindMYSQL.cmake
-	cmake/modules/Findrusql.cmake
-	DESTINATION share/cmake-2.8/Modules
-)
-
-
+add_subdirectory(rusql)
 add_subdirectory(tests)

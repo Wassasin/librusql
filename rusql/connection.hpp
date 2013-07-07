@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-#include "rumysql.hpp"
+#include "mysql/mysql.hpp"
 
 #include "resultset.hpp"
 #include "prepared_statement.hpp"
