@@ -82,10 +82,15 @@ namespace rusql { namespace mysql {
 	unsigned long stmt_param_count(MYSQL_STMT* statement);
 	
 	my_bool stmt_bind_param(MYSQL_STMT* statement, MYSQL_BIND* binds);
+
+	my_bool stmt_bind_result(MYSQL_STMT* statement, MYSQL_BIND* binds);
 	
 	my_bool stmt_close(MYSQL_STMT* statement);
 	
 	int stmt_execute(MYSQL_STMT* statement);
 	
 	int stmt_prepare(MYSQL_STMT* statement, std::string q);
+
+	//! Returns non-zero when there are no more rows to fetch
+	int stmt_fetch(MYSQL_STMT* statement);
 }}
