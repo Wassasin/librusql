@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(31);
+	test_init(38);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -24,12 +24,35 @@ int main(int argc, char *argv[]) {
 		diag(e);
 	}
 	test_finish_try();
+	
+	test_start_try(7);
+	try {
+		auto statement = db->prepare("SELECT * FROM rusqltest");
+		statement.execute();
+
+		std::string value;
+		value.resize(10);
+		statement.bind_results(value);
+		test(statement.fetch(), "one result");
+		test(std::string(value.c_str()) == "a", "a was inserted");
+		test(statement.fetch(), "two results");
+		test(std::string(value.c_str()) == "b", "b was inserted");
+		test(statement.fetch(), "three results");
+		test(std::string(value.c_str()) == "c", "c was inserted");
+		test(!statement.fetch(), "end of results");
+	} catch(std::exception &e) {
+		diag(e);
+	}
+	test_finish_try();
 
 	test_start_try(1);
 	try {
 		// bound query without results
-		auto res = db->query("SELECT * FROM rusqltest WHERE value=?", "foo'barbaz");
-		test(!res, "no results for query");
+		auto statement = db->prepare("SELECT * FROM rusqltest WHERE value=?");
+		statement.bind_parameters("foo'barbaz");
+		statement.execute();
+		statement.fetch();
+		test(!statement, "no results for query");
 	} catch(std::exception &e) {
 		diag(e);
 	}

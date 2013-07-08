@@ -42,7 +42,9 @@ namespace rusql {
 		}
 
 		PreparedStatement prepare (std::string const q) {
-			return PreparedStatement(rusql::mysql::Statement(connection, q));
+			auto p = PreparedStatement(rusql::mysql::Statement(connection, q));
+			result = p.get_token();
+			return p;
 		}
 		
 		void ping(){
@@ -54,7 +56,7 @@ namespace rusql {
 		void connect();
 
 		std::shared_ptr<Database> database;
-		std::weak_ptr<ResultSet::Token> result;
+		std::weak_ptr<Token> result;
 		
 		rusql::mysql::Connection connection;
 	};

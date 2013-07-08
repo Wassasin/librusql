@@ -14,18 +14,30 @@ namespace rusql { namespace mysql {
 		MYSQL_BIND b;
 		std::memset(&b, 0, sizeof(b));
 		b.buffer_type = type_traits<T>::type::get(x);
-		// Remove constness: meaning this cannot be used with mysql_stmt_bind_result
-		b.buffer = const_cast<char*>(type_traits<T>::data::get(x));
+		b.buffer = type_traits<T>::data::get(const_cast<T&>(x));
 		b.buffer_length = type_traits<T>::length::get(x);
 		b.is_unsigned = type_traits<T>::is_unsigned::get(x);
 		return b;
 	}
 	
+	template <typename T>
+	MYSQL_BIND get_mysql_output_bind(T& x){
+		MYSQL_BIND b;
+		std::memset(&b, 0, sizeof(b));
+		b.buffer_type = type_traits<T>::output_type::get(x);
+		b.buffer = type_traits<T>::data::get(x);
+		b.buffer_length = type_traits<T>::length::get(x);
+		b.is_unsigned = type_traits<T>::is_unsigned::get(x);
+		return b;
+	}
+
 	struct Statement : boost::noncopyable {
 		Connection& connection;
 		MYSQL_STMT* statement;
 		
+		//TODO: Rename to input_parameters
 		std::vector<MYSQL_BIND> parameters;
+		std::vector<MYSQL_BIND> output_parameters;
 		
 		Statement(Connection& connection_, std::string const query)
 		: connection(connection_)
@@ -38,6 +50,7 @@ namespace rusql { namespace mysql {
 		: connection(x.connection)
 		, statement(std::move(x.statement))
 		, parameters(std::move(x.parameters))
+		, output_parameters(std::move(x.output_parameters))
 		{
 			x.statement = nullptr;
 		}
@@ -85,12 +98,20 @@ namespace rusql { namespace mysql {
 			}
 			bind_param(parameters.data());
 		}
-		
-		template<typename... T>
-		UseResult bind_execute(T const &... v) {
-			bind(v...);
-			execute();
-			return UseResult(&connection);
+
+		template <typename T>
+		void bind_result_element(T& v){
+			output_parameters.emplace_back(get_mysql_output_bind(v));
+		}
+
+		template <typename T, typename ... Tail>
+		void bind_results(T& v, Tail& ... tail){
+			bind_result_element(v);
+			bind_results(tail ...);
+		}
+
+		void bind_results(){
+			bind_result(output_parameters.data());
 		}
 		
 		int prepare(std::string const q){
@@ -104,11 +125,19 @@ namespace rusql { namespace mysql {
 		my_bool bind_param(MYSQL_BIND* binds){
 			return rusql::mysql::stmt_bind_param(statement, binds);
 		}
+
+		my_bool bind_result(MYSQL_BIND* binds){
+			return rusql::mysql::stmt_bind_result(statement, binds);
+		}
+
+		int fetch(){
+			return rusql::mysql::stmt_fetch(statement);
+		}
 		
 		int execute(){
 			return rusql::mysql::stmt_execute(statement);
 		}
-		
+
 		my_bool close(){
 			auto const result = rusql::mysql::stmt_close(statement);
 			statement = nullptr;

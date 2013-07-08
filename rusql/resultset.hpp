@@ -4,10 +4,8 @@
 #include <string>
 #include <memory>
 
-#include <cppconn/resultset.h>
-#include <cppconn/exception.h>
-
 #include "mysql/mysql.hpp"
+#include "token.hpp"
 
 namespace rusql {
 
@@ -101,8 +99,6 @@ struct Connection;
 		void next() {
 			data.fetch_row();
 		}
-		
-		struct Token {}; // What is shared between the connection and the resultset, so the connection knows when the resultset went out of scope.
 		
 		//! Returns a weak pointer that will expire if the ResultSet is released (goes out of scope, or release() is called.
 		//! Note that this doesn't reflect if the resultset is still valid (due to underlying software). Use is_valid() for check that.

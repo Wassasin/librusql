@@ -15,19 +15,19 @@ namespace rusql { namespace mysql {
 			//! All primitve types (int, double, etc.) can be simply cast to a char* and be done with it.
 			struct Primitive {
 				template <typename T>
-				static char const* get(T const& x){
-					return reinterpret_cast<char const*>(&x);
+				static char* get(T& x){
+					return reinterpret_cast<char*>(&x);
 				}
 			};
 			
 			struct String {
-				static char const* get(std::string const& x){
-					return x.c_str();
+				static char* get(std::string& x){
+					return &x[0];
 				}
 			};
 			
 			struct CharPointer {
-				static char const* get(char const* x){
+				static char* get(char* x){
 					return x;
 				}
 			};
@@ -35,7 +35,7 @@ namespace rusql { namespace mysql {
 			//! For boost::optional, returning the pointer only if the object was set.
 			struct Optional {
 				template <typename T>
-				static char const* get(boost::optional<T> const &x) {
+				static char* get(boost::optional<T> &x) {
 					if(x) {
 						return type_traits<T>::data::get(x.get());
 					} else {
@@ -47,7 +47,7 @@ namespace rusql { namespace mysql {
 			//! For those types without data, such as boost::none_t
 			struct Null {
 				template <typename T>
-				static char const* get(T const&) {
+				static char* get(T&) {
 					return nullptr;
 				}
 			};
@@ -118,6 +118,16 @@ namespace rusql { namespace mysql {
 				}
 			};
 		}
+
+		// Need this as well because boost::optional as "output" (will be written to) is not a MYSQL_TYPE_NULL but simply a T.
+		namespace output_type {
+			struct Optional {
+				template <typename T>
+				static enum_field_types get(boost::optional<T> const& x){
+					return type_traits<T>::output_type::get(x);
+				}
+			};
+		}
 		
 		namespace is_unsigned {
 			struct No {
@@ -155,41 +165,49 @@ namespace rusql { namespace mysql {
 	template <>
 	struct type_traits<uint16_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::Short type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<uint32_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::Long type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<uint64_t> : Primitive, Fixed, Unsigned {
 		typedef field::type::LongLong type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<int16_t> : Primitive, Fixed, Signed {
 		typedef field::type::Short type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<int32_t> : Primitive, Fixed, Signed {
 		typedef field::type::Long type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<int64_t> : Primitive, Fixed, Signed {
 		typedef field::type::LongLong type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<bool> : Primitive, Fixed, Unsigned {
 		typedef field::type::Tiny type;
+		typedef type output_type;
 	};
 	
 	template <>
 	struct type_traits<std::string> : Unsigned {
 		typedef field::type::String type;
+		typedef type output_type;
 		typedef field::buffer::String data;
 		typedef field::length::String length;
 	};
@@ -197,6 +215,7 @@ namespace rusql { namespace mysql {
 	template <typename T>
 	struct type_traits<boost::optional<T>> {
 		typedef field::type::Optional type;
+		typedef field::output_type::Optional output_type;
 		typedef field::buffer::Optional data;
 		typedef field::length::Optional length;
 		typedef field::is_unsigned::Optional is_unsigned;
@@ -205,6 +224,7 @@ namespace rusql { namespace mysql {
 	template <size_t size>
 	struct type_traits<char[size]> : Unsigned {
 		typedef field::type::String type;
+		typedef type output_type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
 	};
@@ -212,6 +232,7 @@ namespace rusql { namespace mysql {
 	template <>
 	struct type_traits<char*> : Unsigned {
 		typedef field::type::String type;
+		typedef type output_type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
 	};
@@ -219,6 +240,7 @@ namespace rusql { namespace mysql {
 	template <>
 	struct type_traits<char const*> : Unsigned {
 		typedef field::type::String type;
+		typedef type output_type;
 		typedef field::buffer::CharPointer data;
 		typedef field::length::String length;
 	};
@@ -226,6 +248,7 @@ namespace rusql { namespace mysql {
 	template <>
 	struct type_traits<boost::none_t> : Unsigned {
 		typedef field::type::Null type;
+		typedef type output_type;
 		typedef field::buffer::Null data;
 		typedef field::length::Fixed length;
 	};
