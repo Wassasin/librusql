@@ -27,8 +27,7 @@ int main(int argc, char *argv[]) {
 	
 	test_start_try(8);
 	try {
-		auto statement = db->prepare("SELECT * FROM rusqltest");
-		statement.execute();
+		auto statement = db->execute("SELECT * FROM rusqltest");
 		statement.store_result();
 
 		std::string value;

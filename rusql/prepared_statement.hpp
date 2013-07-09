@@ -13,8 +13,15 @@ namespace rusql {
 		: statement (std::move(statement_))
 		{}
 
-		void execute() {
+		template <typename Head, typename ... Tail>
+		PreparedStatement&& execute(Head const &head, Tail const& ... tail) {
+			bind_parameters(head, tail ...);
+			return execute();
+		}
+
+		PreparedStatement&& execute() {
 			statement.execute();
+			return std::move(*this);
 		}
 
 		//! Fetches a new row of data from the db, and puts the data into the variables you bound in bind_results which you need to call first, but only once, unless you want to store each row in different variables or something.

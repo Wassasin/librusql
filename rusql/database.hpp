@@ -76,7 +76,7 @@ namespace rusql {
 		}
 
 		template <typename ... T>
-		void execute(std::string const q, T const& ... args) {
+		PreparedStatement execute(std::string const q, T const& ... args) {
 			return get_connection().execute(q, args ...);
 		}
 		

@@ -48,7 +48,7 @@ namespace rusql {
 		}
 		
 		template <typename ... T>
-		void execute(std::string const q, T const& ... args) {
+		PreparedStatement execute(std::string const q, T const& ... args) {
 			return prepare(q).bind_parameters(args ...).execute();
 		}
 
