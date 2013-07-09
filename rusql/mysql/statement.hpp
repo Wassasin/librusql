@@ -35,12 +35,16 @@ namespace rusql { namespace mysql {
 	struct Statement : boost::noncopyable {
 		Connection& connection;
 		MYSQL_STMT* statement;
-		
+
+		struct OutputHelper {
+			OutputProcessor post_process;
+			my_bool is_null;
+		};
+
 		//TODO: Rename to input_parameters
 		std::vector<MYSQL_BIND> parameters;
 		std::vector<MYSQL_BIND> output_parameters;
-		std::vector<OutputProcessor> output_processors;
-		std::vector<my_bool> output_is_null;
+		std::vector<OutputHelper> output_helpers;
 		
 		Statement(Connection& connection_, std::string const query)
 		: connection(connection_)
@@ -54,8 +58,7 @@ namespace rusql { namespace mysql {
 		, statement(std::move(x.statement))
 		, parameters(std::move(x.parameters))
 		, output_parameters(std::move(x.output_parameters))
-		, output_processors(std::move(x.output_processors))
-		, output_is_null(std::move(x.output_is_null))
+		, output_helpers(std::move(x.output_helpers))
 		{
 			x.statement = nullptr;
 		}
@@ -106,12 +109,13 @@ namespace rusql { namespace mysql {
 
 		template <typename T>
 		void bind_result_element(T& v){
-			output_is_null.emplace_back(0);
-			auto res = get_mysql_output_bind(v, output_is_null.back());
+			OutputHelper helper;
+			auto res = get_mysql_output_bind(v, helper.is_null);
+
 			output_parameters.emplace_back(res.first);
-			output_processors.emplace_back(res.second);
-			assert(output_parameters.size() == output_processors.size());
-			assert(output_parameters.size() == output_is_null.size());
+			helper.post_process = res.second;
+			output_helpers.emplace_back(helper);
+			assert(output_parameters.size() == output_helpers.size());
 		}
 
 		template <typename T, typename ... Tail>
@@ -144,11 +148,10 @@ namespace rusql { namespace mysql {
 			int res = rusql::mysql::stmt_fetch(statement);
 			if(res != MYSQL_NO_DATA) {
 				// post-process the bind results
-				assert(output_parameters.size() == output_processors.size());
 				for(unsigned i = 0; i < output_parameters.size(); ++i) {
 					MYSQL_BIND &bound = output_parameters.at(i);
-					OutputProcessor &func = output_processors.at(i);
-					func(bound);
+					auto &helper = output_helpers.at(i);
+					helper.post_process(bound);
 				}
 			}
 			return res;
