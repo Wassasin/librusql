@@ -1,12 +1,15 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #include <boost/optional.hpp>
 
 namespace rusql { namespace mysql {
 	template <typename T>
 	struct type_traits;
+
+	typedef std::function<void(MYSQL_BIND&)> OutputProcessor;
 	
 	//! A collection a functions that map C++ types in one way or another to what MySQL wants (buffer, is_null, field length, etc.)
 	namespace field {
@@ -155,12 +158,50 @@ namespace rusql { namespace mysql {
 				}
 			};
 		}
+
+		//! Post-processors for output data
+		namespace post_processors {
+			struct String {
+				static OutputProcessor get(std::string &x) {
+					return [&x](MYSQL_BIND&) {
+						x.resize(strlen(x.c_str()));
+					};
+				}
+			};
+
+			struct Optional {
+				template <typename T>
+				static OutputProcessor get(boost::optional<T> &x) {
+					return [&x](MYSQL_BIND &b) {
+						// we initialized x so MySQL could write to it; if
+						// the field turned out to be NULL, we will uninitialize it here
+						assert(x);
+						assert(b.is_null);
+						if(*b.is_null) {
+							x = boost::none;
+						} else {
+							auto output_processor = type_traits<T>::output_processor::get(*x);
+							output_processor(b);
+						}
+					};
+				}
+			};
+
+			struct NoPostProcessing {
+				template <typename T>
+				static OutputProcessor get(T&) {
+					return [](MYSQL_BIND&) {};
+				}
+			};
+		}
 	}
 	
-	struct Primitive { typedef field::buffer::Primitive data; };
-	struct Fixed     { typedef field::length::Fixed length; };
-	struct Unsigned  { typedef field::is_unsigned::Yes is_unsigned; };
-	struct Signed    { typedef field::is_unsigned::No is_unsigned; };
+	struct NoProcessing { typedef field::post_processors::NoPostProcessing output_processor; };
+	struct Primitive : NoProcessing
+	                    { typedef field::buffer::Primitive data; };
+	struct Fixed        { typedef field::length::Fixed length; };
+	struct Unsigned     { typedef field::is_unsigned::Yes is_unsigned; };
+	struct Signed       { typedef field::is_unsigned::No is_unsigned; };
 	
 	template <>
 	struct type_traits<uint16_t> : Primitive, Fixed, Unsigned {
@@ -210,6 +251,7 @@ namespace rusql { namespace mysql {
 		typedef type output_type;
 		typedef field::buffer::String data;
 		typedef field::length::String length;
+		typedef field::post_processors::String output_processor;
 	};
 	
 	template <typename T>
@@ -219,6 +261,7 @@ namespace rusql { namespace mysql {
 		typedef field::buffer::Optional data;
 		typedef field::length::Optional length;
 		typedef field::is_unsigned::Optional is_unsigned;
+		typedef field::post_processors::Optional output_processor;
 	};
 	
 	template <size_t size>

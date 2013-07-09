@@ -15,7 +15,7 @@ static bool contains(rusql::ResultSet &rs, std::string value) {
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(4);
+	test_init(11);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NULL)");
 
 	test_start_try(1);
@@ -49,6 +49,29 @@ int main(int argc, char *argv[]) {
 	} catch(std::exception&) {
 		pass("get_string on null throws");
 	}
+
+	test_start_try(7);
+	try {
+		db->execute("INSERT INTO rusqltest VALUES (?)", "a");
+
+		auto statement = db->execute("SELECT * FROM rusqltest");
+		statement.store_result();
+
+		// TODO: I don't want to have to pre-allocate enough space.
+		boost::optional<std::string> value = std::string("enough space for the next value");
+		statement.bind_results(value);
+		test(statement.num_rows() == 2, "two results in num_rows()");
+		test(statement.fetch(), "first result");
+		test(!value, "first result is null");
+		value = std::string("enough space for the next value");
+		test(statement.fetch(), "second results");
+		test(value, "second result is set");
+		test(*value == "a", "second rseult is set correctly");
+		test(!statement.fetch(), "end of results");
+	} catch(std::exception &e) {
+		diag(e);
+	}
+	test_finish_try();
 
 	db->execute("DROP TABLE rusqltest");
 	return 0;

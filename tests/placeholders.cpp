@@ -35,11 +35,11 @@ int main(int argc, char *argv[]) {
 		statement.bind_results(value);
 		test(statement.num_rows() == 3, "three results in num_rows()");
 		test(statement.fetch(), "one result");
-		test(std::string(value.c_str()) == "a", "a was inserted");
+		test(value == "a", "a was inserted");
 		test(statement.fetch(), "two results");
-		test(std::string(value.c_str()) == "b", "b was inserted");
+		test(value == "b", "b was inserted");
 		test(statement.fetch(), "three results");
-		test(std::string(value.c_str()) == "c", "c was inserted");
+		test(value == "c", "c was inserted");
 		test(!statement.fetch(), "end of results");
 	} catch(std::exception &e) {
 		diag(e);

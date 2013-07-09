@@ -21,14 +21,15 @@ namespace rusql { namespace mysql {
 	}
 	
 	template <typename T>
-	MYSQL_BIND get_mysql_output_bind(T& x){
+	std::pair<MYSQL_BIND, OutputProcessor> get_mysql_output_bind(T& x, my_bool &is_null){
 		MYSQL_BIND b;
 		std::memset(&b, 0, sizeof(b));
 		b.buffer_type = type_traits<T>::output_type::get(x);
 		b.buffer = type_traits<T>::data::get(x);
 		b.buffer_length = type_traits<T>::length::get(x);
 		b.is_unsigned = type_traits<T>::is_unsigned::get(x);
-		return b;
+		b.is_null = &is_null;
+		return std::make_pair(b, type_traits<T>::output_processor::get(x));
 	}
 
 	struct Statement : boost::noncopyable {
@@ -38,6 +39,8 @@ namespace rusql { namespace mysql {
 		//TODO: Rename to input_parameters
 		std::vector<MYSQL_BIND> parameters;
 		std::vector<MYSQL_BIND> output_parameters;
+		std::vector<OutputProcessor> output_processors;
+		std::vector<my_bool> output_is_null;
 		
 		Statement(Connection& connection_, std::string const query)
 		: connection(connection_)
@@ -51,6 +54,8 @@ namespace rusql { namespace mysql {
 		, statement(std::move(x.statement))
 		, parameters(std::move(x.parameters))
 		, output_parameters(std::move(x.output_parameters))
+		, output_processors(std::move(x.output_processors))
+		, output_is_null(std::move(x.output_is_null))
 		{
 			x.statement = nullptr;
 		}
@@ -101,7 +106,12 @@ namespace rusql { namespace mysql {
 
 		template <typename T>
 		void bind_result_element(T& v){
-			output_parameters.emplace_back(get_mysql_output_bind(v));
+			output_is_null.emplace_back(0);
+			auto res = get_mysql_output_bind(v, output_is_null.back());
+			output_parameters.emplace_back(res.first);
+			output_processors.emplace_back(res.second);
+			assert(output_parameters.size() == output_processors.size());
+			assert(output_parameters.size() == output_is_null.size());
 		}
 
 		template <typename T, typename ... Tail>
@@ -131,7 +141,17 @@ namespace rusql { namespace mysql {
 		}
 
 		int fetch(){
-			return rusql::mysql::stmt_fetch(statement);
+			int res = rusql::mysql::stmt_fetch(statement);
+			if(res != MYSQL_NO_DATA) {
+				// post-process the bind results
+				assert(output_parameters.size() == output_processors.size());
+				for(unsigned i = 0; i < output_parameters.size(); ++i) {
+					MYSQL_BIND &bound = output_parameters.at(i);
+					OutputProcessor &func = output_processors.at(i);
+					func(bound);
+				}
+			}
+			return res;
 		}
 		
 		int execute(){
