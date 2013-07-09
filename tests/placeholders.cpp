@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
 		auto statement = db->prepare("SELECT * FROM rusqltest WHERE value=?");
 		statement.bind_parameters("foo'barbaz");
 		statement.execute();
+		statement.store_result();
 		test(statement.num_rows() == 0, "no results in num_rows()");
-		statement.fetch();
-		test(!statement, "no results in fetch()");
+		test(!statement.fetch(), "no results in fetch()");
 	} catch(std::exception &e) {
 		diag(e);
 	}

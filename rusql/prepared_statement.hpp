@@ -48,10 +48,6 @@ namespace rusql {
 			return statement.num_rows();
 		}
 
-		operator bool() const {
-			return is_closed();
-		}
-
 		template <typename ... T>
 		PreparedStatement& bind_parameters(T const& ... values) {
 			statement.bind(values ... );
