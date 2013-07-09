@@ -123,5 +123,9 @@ namespace rusql { namespace mysql {
 			
 			return current_row;
 		}
+
+		unsigned long long num_rows() {
+			return rusql::mysql::num_rows(&connection->database, result);
+		}
 	};
 }}

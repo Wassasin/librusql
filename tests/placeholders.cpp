@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(38);
+	test_init(41);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -25,14 +25,16 @@ int main(int argc, char *argv[]) {
 	}
 	test_finish_try();
 	
-	test_start_try(7);
+	test_start_try(8);
 	try {
 		auto statement = db->prepare("SELECT * FROM rusqltest");
 		statement.execute();
+		statement.store_result();
 
 		std::string value;
 		value.resize(10);
 		statement.bind_results(value);
+		test(statement.num_rows() == 3, "three results in num_rows()");
 		test(statement.fetch(), "one result");
 		test(std::string(value.c_str()) == "a", "a was inserted");
 		test(statement.fetch(), "two results");
@@ -45,22 +47,24 @@ int main(int argc, char *argv[]) {
 	}
 	test_finish_try();
 
-	test_start_try(1);
+	test_start_try(2);
 	try {
 		// bound query without results
 		auto statement = db->prepare("SELECT * FROM rusqltest WHERE value=?");
 		statement.bind_parameters("foo'barbaz");
 		statement.execute();
+		test(statement.num_rows() == 0, "no results in num_rows()");
 		statement.fetch();
-		test(!statement, "no results for query");
+		test(!statement, "no results in fetch()");
 	} catch(std::exception &e) {
 		diag(e);
 	}
 	test_finish_try();
 
-	test_start_try(6);
+	test_start_try(7);
 	try {
 		auto res = db->query("SELECT * FROM rusqltest");
+		test(res.num_rows() == 3, "3 results in resultset using num_rows()");
 		test(res.get_string("value") == "a", "a was inserted");
 		res.next();
 		test(res, "two results");

@@ -99,6 +99,10 @@ struct Connection;
 		void next() {
 			data.fetch_row();
 		}
+
+		unsigned long long num_rows() {
+			return data.num_rows();
+		}
 		
 		//! Returns a weak pointer that will expire if the ResultSet is released (goes out of scope, or release() is called.
 		//! Note that this doesn't reflect if the resultset is still valid (due to underlying software). Use is_valid() for check that.

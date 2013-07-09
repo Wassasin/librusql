@@ -134,7 +134,13 @@ namespace rusql { namespace mysql {
 		CHECK;
 		return mysql_fetch_row(result);
 	}
-	
+
+	unsigned long long num_rows(MYSQL *connection, MYSQL_RES *result) {
+		BARK;
+		CHECK;
+		return mysql_num_rows(result);
+	}
+
 	unsigned long long insert_id(MYSQL *connection) {
 		BARK;
 		return mysql_insert_id(connection);
@@ -174,6 +180,19 @@ namespace rusql { namespace mysql {
 	unsigned long long stmt_insert_id(MYSQL_STMT* statement) {
 		BARK;
 		return mysql_stmt_insert_id(statement);
+	}
+
+	void stmt_store_result(MYSQL_STMT *statement) {
+		BARK;
+		CHECK;
+		if(mysql_stmt_store_result(statement) != 0) {
+			throw SQLError(std::string(__FUNCTION__) + " failed, but mysql didn't notice");
+		}
+	}
+
+	unsigned long long stmt_num_rows(MYSQL_STMT *statement) {
+		BARK;
+		return mysql_stmt_num_rows(statement);
 	}
 
 	int stmt_execute(MYSQL_STMT* statement){

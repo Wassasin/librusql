@@ -80,6 +80,8 @@ namespace rusql { namespace mysql {
 	
 	unsigned long long insert_id(MYSQL *connection);
 
+	unsigned long long num_rows(MYSQL *connection, MYSQL_RES *result);
+
 	//! Doesn't return errors
 	unsigned long stmt_param_count(MYSQL_STMT* statement);
 	
@@ -94,6 +96,10 @@ namespace rusql { namespace mysql {
 	int stmt_prepare(MYSQL_STMT* statement, std::string q);
 
 	unsigned long long stmt_insert_id(MYSQL_STMT* statement);
+
+	void stmt_store_result(MYSQL_STMT *statement);
+
+	unsigned long long stmt_num_rows(MYSQL_STMT* statement);
 
 	//! Returns non-zero when there are no more rows to fetch
 	int stmt_fetch(MYSQL_STMT* statement);

@@ -142,6 +142,16 @@ namespace rusql { namespace mysql {
 			return rusql::mysql::stmt_insert_id(statement);
 		}
 
+		void store_result() {
+			rusql::mysql::stmt_store_result(statement);
+		}
+
+		/*! You need to call store_result() before this function returns anything other than 0. This
+		 * is a MySQL limitation. */
+		unsigned long long num_rows() {
+			return rusql::mysql::stmt_num_rows(statement);
+		}
+
 		my_bool close(){
 			auto const result = rusql::mysql::stmt_close(statement);
 			statement = nullptr;

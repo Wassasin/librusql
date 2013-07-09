@@ -31,6 +31,16 @@ namespace rusql {
 			return statement.insert_id();
 		}
 
+		void store_result() {
+			statement.store_result();
+		}
+
+		/*! You need to call store_result() before this function returns anything other than 0. This
+		 * is a MySQL limitation. */
+		unsigned long long num_rows() {
+			return statement.num_rows();
+		}
+
 		operator bool() const {
 			return is_closed();
 		}
