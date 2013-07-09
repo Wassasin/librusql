@@ -56,6 +56,10 @@ namespace rusql {
 			connection.ping();
 		}
 
+		unsigned long long insert_id() {
+			return connection.insert_id();
+		}
+
 	private:
 		//! Connects with the database, disconnects the previous connection, if there was one.
 		void connect();

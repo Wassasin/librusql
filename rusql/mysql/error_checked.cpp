@@ -135,6 +135,11 @@ namespace rusql { namespace mysql {
 		return mysql_fetch_row(result);
 	}
 	
+	unsigned long long insert_id(MYSQL *connection) {
+		BARK;
+		return mysql_insert_id(connection);
+	}
+
 	unsigned long stmt_param_count(MYSQL_STMT* statement){
 		BARK;
 		return mysql_stmt_param_count(statement);

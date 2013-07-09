@@ -38,6 +38,10 @@ namespace rusql { namespace mysql {
 			return rusql::mysql::field_count(&database);
 		}
 		
+		inline unsigned long long insert_id() {
+			return rusql::mysql::insert_id(&database);
+		}
+
 		inline MYSQL_STMT* stmt_init(){
 			return rusql::mysql::stmt_init(&database);
 		}

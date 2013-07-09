@@ -78,6 +78,8 @@ namespace rusql { namespace mysql {
 	//! Needs a connection for error checking
 	MYSQL_ROW fetch_row(MYSQL* connection, MYSQL_RES* result);
 	
+	unsigned long long insert_id(MYSQL *connection);
+
 	//! Doesn't return errors
 	unsigned long stmt_param_count(MYSQL_STMT* statement);
 	
