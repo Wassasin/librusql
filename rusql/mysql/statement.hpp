@@ -109,12 +109,12 @@ namespace rusql { namespace mysql {
 
 		template <typename T>
 		void bind_result_element(T& v){
-			OutputHelper helper;
-			auto res = get_mysql_output_bind(v, helper.is_null);
+			output_helpers.emplace_back(OutputHelper());
+			OutputHelper &helper = output_helpers.back();
 
+			auto res = get_mysql_output_bind(v, helper.is_null);
 			output_parameters.emplace_back(res.first);
 			helper.post_process = res.second;
-			output_helpers.emplace_back(helper);
 			assert(output_parameters.size() == output_helpers.size());
 		}
 
