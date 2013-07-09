@@ -81,6 +81,11 @@ namespace rusql { namespace mysql {
 			}
 		}
 		
+		//! Clear already set binds.
+		void reset_bind() {
+			parameters.clear();
+		}
+
 		template<typename T>
 		void bind_parameter(T const & v) {
 			parameters.emplace_back(get_mysql_bind(v));
@@ -91,20 +96,35 @@ namespace rusql { namespace mysql {
 			//COUT << "Bound arg: type: " << b.buffer_type << " data (length: " << length << " ): " << std::string(begin, end) <<  std::endl;
 		}
 		
+		//! Bind parameters. Resets already bound parameters first.
+		template <typename... Args>
+		void bind(Args const &... args) {
+			reset_bind();
+			bind_append(args ...);
+		}
+
+		//! Call bind_append to bind parameters without clearing already bound ones.
+		//! Use regular bind() if you do want to reset the currently bound parameters.
 		template<typename T, typename... Tail>
-		void bind(T const & v, Tail const &... tail) {
+		void bind_append(T const & v, Tail const &... tail) {
 			bind_parameter(v);
-			bind(tail...);
+			bind_append(tail...);
 		}
 		
-		//! Base case for bind
-		void bind(){
+		//! Base case for bind_append
+		void bind_append(){
 			if(param_count() < parameters.size()){
 				throw TooManyBoundParameters("You've bound too many parameters");
 			} else if(param_count() > parameters.size()){
 				throw TooFewBoundParameters("You've bound too few parameters");
 			}
 			bind_param(parameters.data());
+		}
+
+		//! Clear already set result binds.
+		void reset_result_bind() {
+			output_parameters.clear();
+			output_helpers.clear();
 		}
 
 		template <typename T>
@@ -118,13 +138,21 @@ namespace rusql { namespace mysql {
 			assert(output_parameters.size() == output_helpers.size());
 		}
 
-		template <typename T, typename ... Tail>
-		void bind_results(T& v, Tail& ... tail){
-			bind_result_element(v);
-			bind_results(tail ...);
+		//! Bind result parameters. Resets already bound parameters first.
+		template <typename... Args>
+		void bind_results(Args& ... args) {
+			reset_result_bind();
+			bind_results_append(args ...);
 		}
 
-		void bind_results(){
+		//! Bind new parameters without resetting already bound parameters first.
+		template <typename T, typename ... Tail>
+		void bind_results_append(T& v, Tail& ... tail){
+			bind_result_element(v);
+			bind_results_append(tail ...);
+		}
+
+		void bind_results_append(){
 			bind_result(output_parameters.data());
 		}
 		
