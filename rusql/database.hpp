@@ -77,7 +77,7 @@ namespace rusql {
 
 		template <typename ... T>
 		void execute(std::string const q, T const& ... args) {
-			return get_connection().prepare(q).bind_parameters(args ...).execute();
+			return get_connection().execute(q, args ...);
 		}
 		
 		void ping(){
