@@ -138,6 +138,10 @@ namespace rusql { namespace mysql {
 			return rusql::mysql::stmt_execute(statement);
 		}
 
+		unsigned long long insert_id() {
+			return rusql::mysql::stmt_insert_id(statement);
+		}
+
 		my_bool close(){
 			auto const result = rusql::mysql::stmt_close(statement);
 			statement = nullptr;

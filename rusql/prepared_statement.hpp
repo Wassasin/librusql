@@ -27,6 +27,10 @@ namespace rusql {
 			return statement.statement == nullptr;
 		}
 
+		unsigned long long insert_id() {
+			return statement.insert_id();
+		}
+
 		operator bool() const {
 			return is_closed();
 		}

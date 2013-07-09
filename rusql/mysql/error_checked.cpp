@@ -171,6 +171,11 @@ namespace rusql { namespace mysql {
 		return mysql_stmt_prepare(statement, q.c_str(), q.length());
 	}
 	
+	unsigned long long stmt_insert_id(MYSQL_STMT* statement) {
+		BARK;
+		return mysql_stmt_insert_id(statement);
+	}
+
 	int stmt_execute(MYSQL_STMT* statement){
 		BARK;
 		int result;

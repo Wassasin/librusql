@@ -93,6 +93,8 @@ namespace rusql { namespace mysql {
 	
 	int stmt_prepare(MYSQL_STMT* statement, std::string q);
 
+	unsigned long long stmt_insert_id(MYSQL_STMT* statement);
+
 	//! Returns non-zero when there are no more rows to fetch
 	int stmt_fetch(MYSQL_STMT* statement);
 }}
