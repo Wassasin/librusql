@@ -265,7 +265,7 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <size_t size>
-	struct type_traits<char[size]> : Unsigned {
+	struct type_traits<char[size]> : Unsigned, NoProcessing {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
@@ -273,7 +273,7 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <>
-	struct type_traits<char*> : Unsigned {
+	struct type_traits<char*> : Unsigned, NoProcessing {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
@@ -281,7 +281,7 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <>
-	struct type_traits<char const*> : Unsigned {
+	struct type_traits<char const*> : Unsigned, NoProcessing {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
@@ -289,7 +289,7 @@ namespace rusql { namespace mysql {
 	};
 	
 	template <>
-	struct type_traits<boost::none_t> : Unsigned {
+	struct type_traits<boost::none_t> : Unsigned, NoProcessing {
 		typedef field::type::Null type;
 		typedef type output_type;
 		typedef field::buffer::Null data;
