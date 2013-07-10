@@ -55,8 +55,20 @@ namespace rusql {
 		}
 
 		template <typename ... T>
+		PreparedStatement& bind_parameters_append(T const& ... values) {
+			statement.bind_append(values ...);
+			return *this;
+		}
+
+		template <typename ... T>
 		PreparedStatement& bind_results(T& ... results) {
 			statement.bind_results(results ...);
+			return *this;
+		}
+
+		template <typename ... T>
+		PreparedStatement & bind_results_append(T& ... results) {
+			statement.bind_results_append(results ...);
 			return *this;
 		}
 
