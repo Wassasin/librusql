@@ -10,23 +10,13 @@
 namespace rusql {
 
 struct Connection;
-	struct NoResults : std::runtime_error {
-		NoResults (std::string msg)
-		: runtime_error (msg)
-		{}
-		
-		NoResults()
-		: runtime_error ("There were no results in your dataset.")
-		{}
-	};
-	
 	struct NoMoreResults : std::runtime_error {
 		NoMoreResults (std::string msg)
 		: runtime_error (msg)
 		{}
-		
+
 		NoMoreResults()
-		: runtime_error ("There were results, but we've iterated past them (of before them, anyhow, no results here)")
+		: runtime_error ("There were no results or we already iterated past them")
 		{}
 	};
 	
