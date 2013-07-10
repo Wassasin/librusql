@@ -153,6 +153,11 @@ namespace rusql { namespace mysql {
 		}
 
 		void bind_results_append(){
+			if(field_count() < output_parameters.size()){
+				throw TooManyBoundParameters("You've bound too many output parameters");
+			} else if(field_count() > output_parameters.size()) {
+				throw TooFewBoundParameters("You've bound too few output parameters");
+			}
 			bind_result(output_parameters.data());
 		}
 		
@@ -162,6 +167,10 @@ namespace rusql { namespace mysql {
 		
 		size_t param_count(){
 			return rusql::mysql::stmt_param_count(statement);
+		}
+
+		size_t field_count(){
+			return rusql::mysql::stmt_field_count(statement);
 		}
 		
 		my_bool bind_param(MYSQL_BIND* binds){

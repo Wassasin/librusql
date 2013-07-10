@@ -84,6 +84,8 @@ namespace rusql { namespace mysql {
 
 	//! Doesn't return errors
 	unsigned long stmt_param_count(MYSQL_STMT* statement);
+
+	unsigned long stmt_field_count(MYSQL_STMT* statement);
 	
 	my_bool stmt_bind_param(MYSQL_STMT* statement, MYSQL_BIND* binds);
 

@@ -150,6 +150,12 @@ namespace rusql { namespace mysql {
 		BARK;
 		return mysql_stmt_param_count(statement);
 	}
+
+	unsigned long stmt_field_count(MYSQL_STMT* statement){
+		BARK;
+		return mysql_stmt_field_count(statement);
+	}
+
 	#undef CHECK
 	
 	#define CHECK ErrorCheckerStatement(statement, __FUNCTION__)
