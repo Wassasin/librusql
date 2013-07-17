@@ -1,6 +1,7 @@
 #include "error_checked.hpp"
 
 #include <string>
+#include <iostream>
 
 constexpr static bool output_calls = false;
 
