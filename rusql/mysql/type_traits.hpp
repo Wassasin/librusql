@@ -87,7 +87,7 @@ namespace rusql { namespace mysql {
 					if(!x) {
 						x = T();
 					}
-					return type_traits<T>::output_data::get(x);
+					return type_traits<T>::output_data::get(x.get());
 				}
 
 				template <typename T>
