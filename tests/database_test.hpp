@@ -35,7 +35,7 @@ std::string get_tempdir() {
 	exit(0);
 }
 
-void cleanup_tempdir(void) {
+void cleanup_embedded(void) {
 	mysql_library_end();
 	// TODO
 }
@@ -49,6 +49,7 @@ std::shared_ptr<rusql::Database> get_database(int argc, char *argv[]) {
 			{"test", "--innodb=OFF", "-h", embedded_dir.c_str(), NULL};
 		int num_options = (sizeof(server_options)/sizeof(char*)) - 1;
 		mysql_library_init(num_options, const_cast<char**>(server_options), NULL);
+		atexit(cleanup_embedded);
 		auto db = std::make_shared<rusql::Database>(rusql::Database::ConstructionInfo());
 		db->execute("CREATE DATABASE rusqltest");
 		return std::make_shared<rusql::Database>(rusql::Database::ConstructionInfo("rusqltest"));
