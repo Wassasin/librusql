@@ -91,6 +91,8 @@ namespace rusql { namespace mysql {
 
 	my_bool stmt_bind_result(MYSQL_STMT* statement, MYSQL_BIND* binds);
 	
+	int stmt_fetch_column(MYSQL_STMT* statement, MYSQL_BIND* bind, unsigned int column, unsigned long offset);
+
 	my_bool stmt_close(MYSQL_STMT* statement);
 	
 	int stmt_execute(MYSQL_STMT* statement);

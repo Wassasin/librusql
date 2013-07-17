@@ -170,6 +170,12 @@ namespace rusql { namespace mysql {
 		CHECK;
 		return mysql_stmt_bind_result(statement, binds);
 	}
+
+	int stmt_fetch_column(MYSQL_STMT* statement, MYSQL_BIND* bind, unsigned int column, unsigned long offset) {
+		BARK;
+		CHECK;
+		return mysql_stmt_fetch_column(statement, bind, column, offset);
+	}
 	
 	my_bool stmt_close(MYSQL_STMT* statement){
 		BARK;
