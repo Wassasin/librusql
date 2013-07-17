@@ -89,6 +89,7 @@ namespace rusql { namespace mysql {
 		//! Clear already set binds.
 		void reset_bind() {
 			parameters.clear();
+			parameters.reserve(param_count());
 		}
 
 		template<typename T>
@@ -129,7 +130,9 @@ namespace rusql { namespace mysql {
 		//! Clear already set result binds.
 		void reset_result_bind() {
 			output_parameters.clear();
+			output_parameters.reserve(field_count());
 			output_helpers.clear();
+			output_helpers.reserve(field_count());
 		}
 
 		template <typename T>
@@ -167,7 +170,10 @@ namespace rusql { namespace mysql {
 		}
 		
 		int prepare(std::string const q){
-			return rusql::mysql::stmt_prepare(statement, q);
+			auto res = rusql::mysql::stmt_prepare(statement, q);
+			reset_bind();
+			reset_result_bind();
+			return res;
 		}
 		
 		size_t param_count(){
