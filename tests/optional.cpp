@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 		value = std::string("enough space for the next value");
 		test(statement.fetch(), "second results");
 		test(value, "second result is set");
-		test(*value == "a", "second rseult is set correctly");
+		test(*value == "a", "second result is set correctly");
 		test(!statement.fetch(), "end of results");
 	} catch(std::exception &e) {
 		diag(e);
