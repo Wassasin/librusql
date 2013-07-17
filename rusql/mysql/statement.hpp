@@ -1,9 +1,25 @@
 #pragma once
 
 #include <boost/noncopyable.hpp>
+#include <iostream>
 
 #include "error_checked.hpp"
 #include "type_traits.hpp"
+
+inline std::ostream &operator<<(std::ostream &os, MYSQL_BIND const &b) {
+	os << "== MYSQL_BIND " << (void*)&b << std::endl;
+	auto length = b.buffer_length;
+	os << "Buffer type: " << b.buffer_type << std::endl;
+	os << "Buffer ptr: " << b.buffer;
+	if(b.buffer != 0) {
+		char* begin = (char*)b.buffer;
+		char* end = &((char*)b.buffer)[length];
+		os << " (data: '" << std::string(begin, end) << "')";
+	}
+	os << std::endl;
+	os << "Buffer len: " << length << std::endl;
+	return os;
+}
 
 namespace rusql { namespace mysql {
 	struct TooFewBoundParameters : SQLError { TooFewBoundParameters(std::string const msg) : SQLError(msg) {} };
@@ -95,11 +111,7 @@ namespace rusql { namespace mysql {
 		template<typename T>
 		void bind_parameter(T const & v) {
 			parameters.emplace_back(get_mysql_bind(v));
-			//auto const& b = parameters.back();
-			//auto length = b.buffer_length;
-			//char* begin = (char*)b.buffer;
-			//char* end = &((char*)b.buffer)[length];
-			//COUT << "Bound arg: type: " << b.buffer_type << " data (length: " << length << " ): " << std::string(begin, end) <<  std::endl;
+			//std::cout << "Bound arg: " << parameters.back();
 		}
 		
 		//! Bind parameters. Resets already bound parameters first.
@@ -144,6 +156,8 @@ namespace rusql { namespace mysql {
 			output_parameters.emplace_back(res.first);
 			helper.post_process = res.second;
 			assert(output_parameters.size() == output_helpers.size());
+
+			//std::cout << "Bound result arg: " << output_parameters.back();
 		}
 
 		//! Bind result parameters. Resets already bound parameters first.
