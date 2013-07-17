@@ -35,7 +35,6 @@ int main(int argc, char *argv[]) {
 		while(++i <= 4) {
 			rows.resize(rows.size() + 1);
 			Row &this_row = rows.back();
-			this_row.value.resize(20);
 			statement.bind_results(this_row.id, this_row.value);
 			bool fetched = statement.fetch();
 			if(i <= 3) {

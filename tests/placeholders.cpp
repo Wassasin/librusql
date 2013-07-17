@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
 		statement.store_result();
 
 		std::string value;
-		value.resize(10);
 		statement.bind_results(value);
 		test(statement.num_rows() == 3, "three results in num_rows()");
 		test(statement.fetch(), "one result");

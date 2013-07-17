@@ -57,8 +57,7 @@ int main(int argc, char *argv[]) {
 		auto statement = db->execute("SELECT * FROM rusqltest");
 		statement.store_result();
 
-		// TODO: I don't want to have to pre-allocate enough space.
-		boost::optional<std::string> value = std::string("enough space for the next value");
+		boost::optional<std::string> value;
 		statement.bind_results(value);
 		test(statement.num_rows() == 2, "two results in num_rows()");
 		test(statement.fetch(), "first result");
