@@ -13,6 +13,33 @@ namespace rusql { namespace mysql {
 	
 	//! A collection a functions that map C++ types in one way or another to what MySQL wants (buffer, is_null, field length, etc.)
 	namespace field {
+		namespace length {
+			//! For fields with a fixed length, such as int, double, etc.
+			struct Fixed {
+				template <typename T>
+				static size_t get(T const&){
+					return 0;
+				}
+			};
+
+			struct String {
+				static size_t get(std::string x){
+					return x.size();
+				}
+			};
+
+			struct Optional {
+				template <typename T>
+				static size_t get(boost::optional<T> const& x){
+					if(x){
+						return type_traits<T>::length::get(*x);
+					} else {
+						return 0;
+					}
+				}
+			};
+		}
+
 		//! A collection of functors that get the char const* to any type of variable, to pass to MYSQL_BIND for example.
 		namespace buffer {
 			//! All primitve types (int, double, etc.) can be simply cast to a char* and be done with it.
@@ -46,39 +73,39 @@ namespace rusql { namespace mysql {
 					}
 				}
 			};
+
+			//! For boost::optional, we only return a buffer for fixed-size types
+			struct OptionalOutput {
+				template <typename T>
+				static char* get(boost::optional<T> &x) {
+					typename type_traits<T>::length Length;
+					return get_internal(x, Length);
+				}
+
+				template <typename T>
+				static char* get_internal(boost::optional<T> &x, length::Fixed){
+					if(!x) {
+						x = T();
+					}
+					return type_traits<T>::output_data::get(x);
+				}
+
+				template <typename T>
+				static char* get_internal(boost::optional<T> &, length::String){
+					return nullptr;
+				}
+
+				template <typename T>
+				static char* get_internal(boost::optional<T> &x, length::Optional){
+					return get_internal((x = T()).get(), type_traits<T>::length);
+				}
+			};
 			
 			//! For those types without data, such as boost::none_t
 			struct Null {
 				template <typename T>
 				static char* get(T&) {
 					return nullptr;
-				}
-			};
-		}
-		
-		namespace length {
-			//! For fields with a fixed length, such as int, double, etc.
-			struct Fixed {
-				template <typename T>
-				static size_t get(T const&){
-					return 0;
-				}
-			};
-			
-			struct String {
-				static size_t get(std::string x){
-					return x.size();
-				}
-			};
-			
-			struct Optional {
-				template <typename T>
-				static size_t get(boost::optional<T> const& x){
-					if(x){
-						return type_traits<T>::length::get(*x);
-					} else {
-						return 0;
-					}
 				}
 			};
 		}
@@ -233,7 +260,7 @@ namespace rusql { namespace mysql {
 		typedef field::output_type::Optional output_type;
 		typedef field::buffer::Optional data;
 		// set to null to just get the length; we set the buffer later
-		typedef field::buffer::Null output_data;
+		typedef field::buffer::OptionalOutput output_data;
 		typedef field::length::Optional length;
 		typedef field::is_unsigned::Optional is_unsigned;
 		typedef field::post_processors::Optional output_processor;
