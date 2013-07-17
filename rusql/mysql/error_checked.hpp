@@ -35,8 +35,8 @@ namespace rusql { namespace mysql {
 		void check_and_throw(std::string const function);
 	};
 	
-	#define CHECK ErrorCheckerConnection(connection, __FUNCTION__)
 	MYSQL* init(MYSQL* connection);
+	void close(MYSQL* connection);
 	
 	int ping(MYSQL* connection);
 	

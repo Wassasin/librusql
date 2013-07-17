@@ -19,6 +19,10 @@ namespace rusql { namespace mysql {
 		Connection(MYSQL&& database_)
 		: database(std::move(database_))
 		{}
+
+		~Connection() {
+			rusql::mysql::close(&database);
+		}
 		
 		MYSQL database;
 		

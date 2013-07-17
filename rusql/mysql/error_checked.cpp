@@ -52,6 +52,12 @@ namespace rusql { namespace mysql {
 		CHECK;
 		return mysql_init(connection);
 	}
+
+	void close(MYSQL* connection) {
+		BARK;
+		CHECK;
+		return mysql_close(connection);
+	}
 	
 	int ping(MYSQL* connection){
 		BARK;
