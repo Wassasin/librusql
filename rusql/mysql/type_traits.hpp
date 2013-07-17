@@ -9,7 +9,7 @@ namespace rusql { namespace mysql {
 	template <typename T>
 	struct type_traits;
 
-	typedef std::function<void(MYSQL_BIND&)> OutputProcessor;
+	typedef std::function<void(MYSQL_BIND&, Statement&, unsigned int)> OutputProcessor;
 	
 	//! A collection a functions that map C++ types in one way or another to what MySQL wants (buffer, is_null, field length, etc.)
 	namespace field {
@@ -159,46 +159,17 @@ namespace rusql { namespace mysql {
 			};
 		}
 
-		//! Post-processors for output data
 		namespace post_processors {
-			struct String {
-				static OutputProcessor get(std::string &x) {
-					return [&x](MYSQL_BIND&) {
-						x.resize(strlen(x.c_str()));
-					};
-				}
-			};
-
-			struct Optional {
-				template <typename T>
-				static OutputProcessor get(boost::optional<T> &x) {
-					return [&x](MYSQL_BIND &b) {
-						// we initialized x so MySQL could write to it; if
-						// the field turned out to be NULL, we will uninitialize it here
-						assert(x);
-						assert(b.is_null);
-						if(*b.is_null) {
-							x = boost::none;
-						} else {
-							auto output_processor = type_traits<T>::output_processor::get(*x);
-							output_processor(b);
-						}
-					};
-				}
-			};
-
-			struct NoPostProcessing {
-				template <typename T>
-				static OutputProcessor get(T&) {
-					return [](MYSQL_BIND&) {};
-				}
-			};
+			struct Optional;
+			struct String;
+			struct NoPostProcessing;
 		}
 	}
 	
 	struct NoProcessing { typedef field::post_processors::NoPostProcessing output_processor; };
 	struct Primitive : NoProcessing
-	                    { typedef field::buffer::Primitive data; };
+	                    { typedef field::buffer::Primitive data;
+	                      typedef data output_data; };
 	struct Fixed        { typedef field::length::Fixed length; };
 	struct Unsigned     { typedef field::is_unsigned::Yes is_unsigned; };
 	struct Signed       { typedef field::is_unsigned::No is_unsigned; };
@@ -250,6 +221,8 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::String data;
+		// set to null to just get the length; we set the buffer later
+		typedef field::buffer::Null output_data;
 		typedef field::length::String length;
 		typedef field::post_processors::String output_processor;
 	};
@@ -259,6 +232,8 @@ namespace rusql { namespace mysql {
 		typedef field::type::Optional type;
 		typedef field::output_type::Optional output_type;
 		typedef field::buffer::Optional data;
+		// set to null to just get the length; we set the buffer later
+		typedef field::buffer::Null output_data;
 		typedef field::length::Optional length;
 		typedef field::is_unsigned::Optional is_unsigned;
 		typedef field::post_processors::Optional output_processor;
@@ -269,6 +244,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
+		typedef data output_data;
 		typedef field::length::String length;
 	};
 	
@@ -277,6 +253,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
+		typedef data output_data;
 		typedef field::length::String length;
 	};
 	
@@ -285,6 +262,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::String type;
 		typedef type output_type;
 		typedef field::buffer::CharPointer data;
+		typedef data output_data;
 		typedef field::length::String length;
 	};
 	
@@ -293,6 +271,7 @@ namespace rusql { namespace mysql {
 		typedef field::type::Null type;
 		typedef type output_type;
 		typedef field::buffer::Null data;
+		typedef data output_data;
 		typedef field::length::Fixed length;
 	};
 }}

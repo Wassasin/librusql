@@ -9,6 +9,12 @@ namespace rusql { namespace mysql {
 	struct TooFewBoundParameters : SQLError { TooFewBoundParameters(std::string const msg) : SQLError(msg) {} };
 	struct TooManyBoundParameters : SQLError { TooManyBoundParameters(std::string const msg) : SQLError(msg) {} };
 	
+	struct OutputHelper {
+		OutputProcessor post_process;
+		my_bool is_null;
+		unsigned long field_length;
+	};
+
 	template <typename T>
 	MYSQL_BIND get_mysql_bind(T const& x){
 		MYSQL_BIND b;
@@ -21,25 +27,24 @@ namespace rusql { namespace mysql {
 	}
 	
 	template <typename T>
-	std::pair<MYSQL_BIND, OutputProcessor> get_mysql_output_bind(T& x, my_bool &is_null){
+	std::pair<MYSQL_BIND, OutputProcessor> get_mysql_output_bind(T& x, OutputHelper &helper){
 		MYSQL_BIND b;
 		std::memset(&b, 0, sizeof(b));
 		b.buffer_type = type_traits<T>::output_type::get(x);
-		b.buffer = type_traits<T>::data::get(x);
-		b.buffer_length = type_traits<T>::length::get(x);
+		b.buffer = type_traits<T>::output_data::get(x);
+		// the buffer length is always 0 for fixed-width values like int;
+		// for dynamic-width values output_data returns nullptr and we will
+		// fetch_column the actual value later in field::post_processors::Fetch
+		b.buffer_length = 0;
 		b.is_unsigned = type_traits<T>::is_unsigned::get(x);
-		b.is_null = &is_null;
+		b.is_null = &helper.is_null;
+		b.length = &helper.field_length;
 		return std::make_pair(b, type_traits<T>::output_processor::get(x));
 	}
 
 	struct Statement : boost::noncopyable {
 		Connection& connection;
 		MYSQL_STMT* statement;
-
-		struct OutputHelper {
-			OutputProcessor post_process;
-			my_bool is_null;
-		};
 
 		//TODO: Rename to input_parameters
 		std::vector<MYSQL_BIND> parameters;
@@ -132,7 +137,7 @@ namespace rusql { namespace mysql {
 			output_helpers.emplace_back(OutputHelper());
 			OutputHelper &helper = output_helpers.back();
 
-			auto res = get_mysql_output_bind(v, helper.is_null);
+			auto res = get_mysql_output_bind(v, helper);
 			output_parameters.emplace_back(res.first);
 			helper.post_process = res.second;
 			assert(output_parameters.size() == output_helpers.size());
@@ -192,7 +197,7 @@ namespace rusql { namespace mysql {
 				for(unsigned i = 0; i < output_parameters.size(); ++i) {
 					MYSQL_BIND &bound = output_parameters.at(i);
 					auto &helper = output_helpers.at(i);
-					helper.post_process(bound);
+					helper.post_process(bound, *this, i);
 				}
 			}
 			return res;
@@ -222,4 +227,78 @@ namespace rusql { namespace mysql {
 			return result;
 		}
 	};
+
+	namespace field {
+		namespace post_processors {
+			template <typename T>
+			struct Fetch {
+				static void fetch(MYSQL_BIND &b, Statement &s, unsigned int column, T &x) {
+					b.buffer = type_traits<T>::data::get(x);
+					s.fetch_column(&b, column, 0);
+				}
+			};
+
+			template <>
+			struct Fetch<std::string> {
+				static void fetch(MYSQL_BIND &b, Statement &s, unsigned int column, std::string &x){
+					assert(b.length);
+					x.resize(*b.length);
+					b.buffer = type_traits<std::string>::data::get(x);
+					b.buffer_length = x.length();
+					s.fetch_column(&b, column, 0);
+					b.buffer = type_traits<std::string>::output_data::get(x);
+					if(b.buffer == nullptr) {
+						b.buffer_length = 0;
+					}
+				}
+			};
+
+			template <typename T>
+			struct Fetch<boost::optional<T>> {
+				static void fetch(MYSQL_BIND &b, Statement &s, unsigned int column, boost::optional<T> &x) {
+					auto func = type_traits<boost::optional<T>>::output_processor::get(x);
+					func(b, s, column);
+					b.buffer = type_traits<boost::optional<T>>::output_data::get(x);
+					if(b.buffer == nullptr) {
+						b.buffer_length = 0;
+					}
+				}
+			};
+
+			struct String {
+				static OutputProcessor get(std::string &x) {
+					return [&x](MYSQL_BIND &b, Statement &s, unsigned int column) {
+						Fetch<std::string>::fetch(b, s, column, x);
+					};
+				}
+			};
+
+			struct Optional {
+				template <typename T>
+				static OutputProcessor get(boost::optional<T> &x) {
+					return [&x](MYSQL_BIND &b, Statement &s, unsigned int column) {
+						assert(b.is_null);
+						bool is_null = *b.is_null;
+						if(is_null) {
+							x = boost::none;
+						} else {
+							if(!x) {
+								x = T();
+							}
+							Fetch<T>::fetch(b, s, column, *x);
+						}
+					};
+				}
+			};
+
+			struct NoPostProcessing {
+				template <typename T>
+				static OutputProcessor get(T&) {
+					return [](MYSQL_BIND&, Statement &, unsigned int) {};
+				}
+			};
+		}
+	}
+
+
 }}
