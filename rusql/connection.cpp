@@ -1,7 +1,7 @@
 #include "rusql.hpp"
 
 namespace rusql {
-	Connection::Connection(std::shared_ptr< Database > database_)
+	Connection::Connection(std::weak_ptr< Database > database_)
 	: database(database_)
 	{
 		connect();
@@ -10,30 +10,31 @@ namespace rusql {
 	//! Connects with the database, disconnects the previous connection, if there was one.
 	void Connection::connect(){
 		typedef Database::ConstructionInfo::ConstructionInfoType CIType;
+		std::shared_ptr<Database> db = database.lock();
 
-		switch(database->info.type) {
+		switch(db->info.type) {
 		case CIType::TCP:
 			connection.connect(
-				database->info.host,
-				database->info.port,
-				database->info.user,
-				database->info.password,
-				database->info.database,
+				db->info.host,
+				db->info.port,
+				db->info.user,
+				db->info.password,
+				db->info.database,
 				0);
 			break;
 
 		case CIType::UNIX:
 			connection.connect(
-				database->info.unix_path,
-				database->info.user,
-				database->info.password,
-				database->info.database,
+				db->info.unix_path,
+				db->info.user,
+				db->info.password,
+				db->info.database,
 				0);
 			break;
 
 		case CIType::Embedded:
 			connection.connect(
-				database->info.database,
+				db->info.database,
 				0);
 			break;
 

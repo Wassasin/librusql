@@ -12,7 +12,7 @@ namespace rusql {
 	struct Database;
 
 	struct Connection {
-		Connection (std::shared_ptr<Database> database);
+		Connection (std::weak_ptr<Database> database);
 
 		//! Reconnects if lost connection
 		void make_valid() {
@@ -64,7 +64,7 @@ namespace rusql {
 		//! Connects with the database, disconnects the previous connection, if there was one.
 		void connect();
 
-		std::shared_ptr<Database> database;
+		std::weak_ptr<Database> database;
 		std::weak_ptr<Token> result;
 		
 		rusql::mysql::Connection connection;
