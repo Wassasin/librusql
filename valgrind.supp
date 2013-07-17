@@ -1,0 +1,17 @@
+{
+   getlogin
+   Memcheck:Leak
+   ...
+   fun:getlogin
+}
+
+{
+   http://bugs.mysql.com/bug.php?id=62245
+   Memcheck:Leak
+   fun:malloc
+   fun:my_malloc
+   fun:init_alloc_root
+   fun:mysql_stmt_init
+   fun:_ZN5rusql5mysql9stmt_initEP8st_mysql
+}
+
