@@ -8,7 +8,7 @@ include_directories(${MYSQL_INCLUDE_DIRS})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_library(rusql_mysql ${sources})
+add_library(rusql_mysql ${sources} ${headers})
 target_link_libraries(rusql_mysql ${MYSQL_LIBRARIES} ${Boost_LIBRARIES})
 
 if(MYSQLd_FOUND)
