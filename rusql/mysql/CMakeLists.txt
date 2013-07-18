@@ -17,6 +17,7 @@ if(MYSQLd_FOUND)
 endif()
 
 install(FILES ${headers} DESTINATION include/rusql/mysql)
+
 #TODO: Install rusql_mysql and rusql_mysql_embedded
 install(FILES
 	cmake/modules/FindMYSQL.cmake
