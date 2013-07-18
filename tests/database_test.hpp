@@ -1,10 +1,14 @@
 #include <memory>
-#include <time.h>
-#include <string.h>
+
+#include <ctime>
+#include <cstring>
+#include <cstdlib>
+
 #include <errno.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <rusql/database.hpp>
 
 static bool is_embedded;
 static std::string embedded_dir;
