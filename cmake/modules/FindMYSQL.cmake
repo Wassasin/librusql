@@ -1,14 +1,8 @@
 # - Find MySQL
-# Find the MySQL
-# This module defines
 #
-# MYSQL_FOUND, If false, do not try to use MySQL.
-# MYSQL_INCLUDE_DIR, where to find mysql.h
-# MYSQL_LIBRARIES, the libraries needed to use MySQL.
-#
-# MYSQLd_FOUND, If false, do not try to use MySQL Embedded.
-# MYSQL_LIBRARIES, the libraries needed to use MySQL.
-# MYSQLd_LIBRARIES, the libraries needed to use MySQL Embedded.
+# MYSQL_FOUND
+# MYSQL_INCLUDE_DIRS
+# MYSQL_LIBRARIES
 
 include(LibFindMacros)
 

@@ -2,7 +2,7 @@
 # This module sets
 #
 # MYSQLd_FOUND
-# MYSQLd_INCLUDE_DIR
+# MYSQLd_INCLUDE_DIRS
 # MYSQLd_LIBRARIES
 
 include(LibFindMacros)
