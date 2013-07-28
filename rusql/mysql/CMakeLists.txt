@@ -22,10 +22,5 @@ endif()
 install(FILES ${headers} DESTINATION include/rusql/mysql)
 
 #TODO: Install rusql_mysql and rusql_mysql_embedded
-install(FILES
-	cmake/modules/FindMYSQL.cmake
-	cmake/modules/Findrusql.cmake
-	DESTINATION share/cmake-2.8/Modules
-)
 
 set(MYSQL_DRIVER_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} PARENT_SCOPE)
