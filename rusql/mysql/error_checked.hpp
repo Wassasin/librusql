@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include <mysql/mysql.h>
+#include <mysql.h>
 
 #include <boost/optional.hpp>
 

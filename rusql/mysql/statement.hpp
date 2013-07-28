@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/noncopyable.hpp>
+#include <vector>
 #include <iostream>
 
 #include "error_checked.hpp"

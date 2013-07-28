@@ -5,6 +5,9 @@ file(GLOB sources *.cpp)
 
 find_package(MYSQL REQUIRED)
 include_directories(${MYSQL_INCLUDE_DIRS})
+
+find_package(MYSQLd)
+
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -24,3 +27,5 @@ install(FILES
 	cmake/modules/Findrusql.cmake
 	DESTINATION share/cmake-2.8/Modules
 )
+
+set(MYSQL_DRIVER_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} PARENT_SCOPE)
