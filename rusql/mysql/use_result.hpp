@@ -80,19 +80,43 @@ namespace rusql { namespace mysql {
 			
 			throw ColumnNotFound("Column '" + column_name + "' not found");
 		}
+
+		template <typename T>
+		struct Getter {
+			static T get(size_t const index, UseResult& result){
+				auto r = result.raw_get(index);
+
+				if(r == nullptr){
+					throw std::runtime_error("There's nothing to be found!");
+				} else {
+					return boost::lexical_cast<T>(r);
+				}
+			}
+		};
+
+		template <typename T>
+		struct Getter<boost::optional<T>> {
+			static boost::optional<T> get(size_t const index, UseResult& result){
+				auto r = result.raw_get(index);
+
+				if(r == nullptr){
+					return boost::none;
+				} else {
+					return boost::lexical_cast<T>(r);
+				}
+			}
+		};
 		
 		template <typename T>
 		T get(size_t const index){
-			assert(result != nullptr);
-
-			return boost::lexical_cast<T>(raw_get(index));
+			return Getter<T>::get(index, *this);
 		}
 		
 		template <typename T>
 		T get(std::string const column_name){
 			assert(result != nullptr);
 
-			return boost::lexical_cast<T>(raw_get(column_name));
+			return get<T>(get_index(column_name));
 		}
 		
 		char* raw_get(size_t const index){
