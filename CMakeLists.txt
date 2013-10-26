@@ -47,3 +47,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules"
 
 add_subdirectory(rusql)
 add_subdirectory(tests)
+
+install(FILES
+	cmake/modules/FindMYSQL.cmake
+	cmake/modules/Findrusql.cmake
+	DESTINATION share/cmake-2.8/Modules
+)
