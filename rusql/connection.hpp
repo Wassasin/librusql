@@ -52,6 +52,11 @@ namespace rusql {
 			return prepare(q).bind_parameters(args ...).execute();
 		}
 
+		template <typename T>
+		PreparedStatement execute(std::string const q, std::vector<T> const &args) {
+			return prepare(q).bind_parameters(args).execute();
+		}
+
 		void ping(){
 			connection.ping();
 		}

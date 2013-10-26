@@ -79,6 +79,11 @@ namespace rusql {
 		PreparedStatement execute(std::string const q, T const& ... args) {
 			return get_connection().execute(q, args ...);
 		}
+
+		template <typename T>
+		PreparedStatement execute(std::string const q, std::vector<T> const &args) {
+			return get_connection().execute(q, args);
+		}
 		
 		void ping(){
 			get_connection().ping();

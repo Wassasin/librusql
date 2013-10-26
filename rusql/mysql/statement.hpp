@@ -115,6 +115,16 @@ namespace rusql { namespace mysql {
 			//std::cout << "Bound arg: " << parameters.back();
 		}
 		
+		//! Bind parameters by vector. Resets already bound parameters first.
+		template <typename T>
+		void bind(std::vector<T> const & args) {
+			reset_bind();
+			for(const T &t : args) {
+				bind_parameter(t);
+			}
+			bind_append();
+		}
+
 		//! Bind parameters. Resets already bound parameters first.
 		template <typename... Args>
 		void bind(Args const &... args) {

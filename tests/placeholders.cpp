@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(41);
+	test_init(44);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -183,6 +183,21 @@ int main(int argc, char *argv[]) {
 	}
 	test_finish_try();
 
+	db->execute("DROP TABLE rusqltest");
+	db->execute("CREATE TABLE rusqltest (`value` INT(2) NULL, `foo` VARCHAR(4) NULL)");
+	test_start_try(3);
+	try {
+		db->execute("INSERT INTO rusqltest VALUES (?, ?)", std::vector<std::string>{"12", "quux"});
+		pass("Insert number and string using vector");
+		auto res = db->query("SELECT * FROM rusqltest");
+		auto first = res.get_uint64(0);
+		test(first == 12, "Number was inserted correctly");
+		auto second = res.get_string(1);
+		test(second == "quux", "String was inserted correctly");
+	} catch(std::exception &e) {
+		diag(e);
+	}
+	test_finish_try();
 	db->execute("DROP TABLE rusqltest");
 
 	return 0;

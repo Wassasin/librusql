@@ -13,6 +13,12 @@ namespace rusql {
 		: statement (std::move(statement_))
 		{}
 
+		template <typename T>
+		PreparedStatement execute(std::vector<T> const &args) {
+			bind_parameters(args);
+			return execute();
+		}
+
 		template <typename Head, typename ... Tail>
 		PreparedStatement&& execute(Head const &head, Tail const& ... tail) {
 			bind_parameters(head, tail ...);
@@ -51,6 +57,12 @@ namespace rusql {
 		template <typename ... T>
 		PreparedStatement& bind_parameters(T const& ... values) {
 			statement.bind(values ... );
+			return *this;
+		}
+
+		template <typename T>
+		PreparedStatement& bind_parameters(std::vector<T> const &values) {
+			statement.bind(values);
 			return *this;
 		}
 
