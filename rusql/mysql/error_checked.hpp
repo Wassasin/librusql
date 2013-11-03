@@ -35,6 +35,9 @@ namespace rusql { namespace mysql {
 		void check_and_throw(std::string const function);
 	};
 	
+	void thread_init(void);
+	void thread_end(void);
+
 	MYSQL* init(MYSQL* connection);
 	void close(MYSQL* connection);
 	

@@ -6,6 +6,15 @@
 #include "connection.hpp"
 
 namespace rusql {
+	struct ThreadHandle {
+		ThreadHandle() {
+			rusql::mysql::thread_init();
+		}
+		~ThreadHandle() {
+			rusql::mysql::thread_end();
+		}
+	};
+
 	struct Database : std::enable_shared_from_this<Database> {
 		struct ConstructionInfo {
 			enum class ConstructionInfoType {
@@ -87,6 +96,10 @@ namespace rusql {
 		
 		void ping(){
 			get_connection().ping();
+		}
+
+		ThreadHandle get_thread_handle() {
+			return ThreadHandle();
 		}
 
 	private:

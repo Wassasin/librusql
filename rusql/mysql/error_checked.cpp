@@ -46,6 +46,17 @@ namespace rusql { namespace mysql {
 		}
 	}
 
+	void thread_init(void) {
+		BARK;
+		if(mysql_thread_init() != 0) {
+			throw SQLError("mysql_thread_init failed");
+		}
+	}
+
+	void thread_end(void) {
+		BARK;
+		mysql_thread_end();
+	}
 	
 	#define CHECK ErrorCheckerConnection(connection, __FUNCTION__)
 	MYSQL* init(MYSQL* connection){
