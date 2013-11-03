@@ -10,7 +10,8 @@
 namespace rusql {
 	struct PreparedStatement {
 		PreparedStatement (rusql::mysql::Statement&& statement_)
-		: statement (std::move(statement_))
+		: token(std::make_shared<Token>())
+		, statement (std::move(statement_))
 		{}
 
 		template <typename T>
@@ -85,6 +86,7 @@ namespace rusql {
 		}
 
 		std::weak_ptr<Token> get_token() const {
+			assert(token);
 			return token;
 		}
 
