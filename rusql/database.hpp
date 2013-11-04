@@ -11,6 +11,7 @@ namespace rusql {
 		ThreadHandle() {
 			rusql::mysql::thread_init();
 		}
+		ThreadHandle(ThreadHandle&&) = default;
 		~ThreadHandle() {
 			rusql::mysql::thread_end();
 		}
