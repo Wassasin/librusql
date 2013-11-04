@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <boost/thread/mutex.hpp>
 
 #include "connection.hpp"
 
@@ -60,14 +61,6 @@ namespace rusql {
 		: info (rh) {
 		}
 
-		Connection& get_connection() {
-			for (auto & c : connections) {
-				if (c->is_free()) return *c;
-			}
-
-			return create_connection();
-		}
-
 		int number_of_active_connections() const {
 			int num = 0;
 			for(auto const &c : connections) {
@@ -77,24 +70,29 @@ namespace rusql {
 		}
 
 		ResultSet query(std::string const q) {
+			boost::mutex::scoped_lock lock(connections_mutex);
 			return get_connection().query(q);
 		}
 
 		PreparedStatement prepare(std::string const q){
+			boost::mutex::scoped_lock lock(connections_mutex);
 			return get_connection().prepare(q);
 		}
 
 		template <typename ... T>
 		PreparedStatement execute(std::string const q, T const& ... args) {
+			boost::mutex::scoped_lock lock(connections_mutex);
 			return get_connection().execute(q, args ...);
 		}
 
 		template <typename T>
 		PreparedStatement execute(std::string const q, std::vector<T> const &args) {
+			boost::mutex::scoped_lock lock(connections_mutex);
 			return get_connection().execute(q, args);
 		}
 		
 		void ping(){
+			boost::mutex::scoped_lock lock(connections_mutex);
 			get_connection().ping();
 		}
 
@@ -107,6 +105,15 @@ namespace rusql {
 		ConstructionInfo const info;
 
 		std::vector<std::shared_ptr<Connection>> connections;
+		boost::mutex connections_mutex;
+
+		Connection& get_connection() {
+			for (auto & c : connections) {
+				if (c->is_free()) return *c;
+			}
+
+			return create_connection();
+		}
 
 		Connection& create_connection() {
 			connections.emplace_back (std::make_shared<Connection> (shared_from_this()));
