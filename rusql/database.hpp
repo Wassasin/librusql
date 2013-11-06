@@ -82,14 +82,14 @@ namespace rusql {
 
 		template <typename ... T>
 		PreparedStatement execute(std::string const q, T const& ... args) {
-			boost::mutex::scoped_lock lock(connections_mutex);
-			return get_connection().execute(q, args ...);
+			PreparedStatement s = prepare(q);
+			return s.execute(args ...);
 		}
 
 		template <typename T>
 		PreparedStatement execute(std::string const q, std::vector<T> const &args) {
-			boost::mutex::scoped_lock lock(connections_mutex);
-			return get_connection().execute(q, args);
+			PreparedStatement s = prepare(q);
+			return s.execute(args);
 		}
 		
 		void ping(){
