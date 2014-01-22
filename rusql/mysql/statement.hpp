@@ -262,6 +262,40 @@ namespace rusql { namespace mysql {
 		std::shared_ptr<MYSQL_RES> result_metadata(){
 			return std::shared_ptr<MYSQL_RES>(rusql::mysql::stmt_result_metadata(statement), rusql::mysql::free_result);
 		}
+
+		//! Get the column number of a column by name. Can only be called
+		//! after execute().
+		int column_number(std::string name) {
+			auto mysql_res = result_metadata();
+			int column = 0;
+			while(MYSQL_FIELD *field = rusql::mysql::fetch_field(mysql_res.get())) {
+				if(name == field->name) {
+					return column;
+				}
+				column++;
+			}
+			throw std::runtime_error("No column with that name");
+		}
+
+		template <typename T>
+		T get(std::string name) {
+			int column = column_number(name);
+
+			T result;
+			rusql::mysql::OutputHelper helper;
+			auto bind_info = rusql::mysql::get_mysql_output_bind(result, helper);
+
+			MYSQL_BIND &bound = bind_info.first;
+			rusql::mysql::OutputProcessor &processor = bind_info.second;
+
+			// if this column is unbound -> fetch_column acts as if it was NULL, but should throw (TODO)
+			// if T is optional -> correctly sets optional to uninitialized or initialized value
+			// if this cell is NULL -> initializes T to default value, but should throw (TODO)
+			fetch_column(&bound, column, 0);
+
+			processor(bound, *this, column);
+			return result;
+		}
 	};
 
 	namespace field {

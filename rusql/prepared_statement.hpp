@@ -31,41 +31,12 @@ namespace rusql {
 			return std::move(*this);
 		}
 
-		//! Get the column number of a column by name. Can only be called
-		//! after execute().
-		int column_number(std::string name) {
-			auto mysql_res = statement.result_metadata();
-			int column = 0;
-			while(MYSQL_FIELD *field = rusql::mysql::fetch_field(mysql_res.get())) {
-				if(name == field->name) {
-					return column;
-				}
-				column++;
-			}
-			throw std::runtime_error("No column with that name");
-		}
-
 		//! Get a column by name, but only if it was bound using
 		//! bind_results() before. If it wasn't bound before, this
 		//! method behaves as if the cell was NULL.
 		template <typename T>
 		T get(std::string name) {
-			int column = column_number(name);
-
-			T result;
-			rusql::mysql::OutputHelper helper;
-			auto bind_info = rusql::mysql::get_mysql_output_bind(result, helper);
-
-			MYSQL_BIND &bound = bind_info.first;
-			rusql::mysql::OutputProcessor &processor = bind_info.second;
-
-			// if this column is unbound -> fetch_column acts as if it was NULL, but should throw (TODO)
-			// if T is optional -> correctly sets optional to uninitialized or initialized value
-			// if this cell is NULL -> initializes T to default value, but should throw (TODO)
-			statement.fetch_column(&bound, column, 0);
-
-			processor(bound, statement, column);
-			return result;
+			return statement.get<T>(name);
 		}
 
 		//! Fetches a new row of data from the db, and puts the data into the variables you bound in bind_results which you need to call first, but only once, unless you want to store each row in different variables or something.
