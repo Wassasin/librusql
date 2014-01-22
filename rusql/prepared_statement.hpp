@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <map>
 
 #include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
 #include "mysql/mysql.hpp"
 #include "token.hpp"
@@ -29,6 +31,16 @@ namespace rusql {
 		PreparedStatement&& execute() {
 			statement.execute();
 			return std::move(*this);
+		}
+
+	public:
+		//! Makes all result rows available for named retrieval. Replaces a
+		//! call to bind_results(), i.e. you can choose to call either but
+		//! cannot call both.
+		//! You must call this method in between calling execute() and calling
+		//! fetch().
+		void bind_all_self() {
+			statement.bind_all_self();
 		}
 
 		//! Get a column by name, but only if it was bound using
@@ -101,5 +113,5 @@ namespace rusql {
 	private:
 		std::shared_ptr<Token> token;
 		rusql::mysql::Statement statement;
-	};
+};
 }

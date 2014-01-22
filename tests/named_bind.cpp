@@ -19,9 +19,7 @@ int main(int argc, char *argv[]) {
 	try {
 		auto statement = db->execute("SELECT * FROM rusqltest");
 
-		int n;
-		std::string s;
-		statement.bind_results(n, s);
+		statement.bind_all_self();
 
 		test(statement.fetch(), "first result");
 		test(statement.get<int>("id") == 5, "first result int");
@@ -47,9 +45,7 @@ int main(int argc, char *argv[]) {
 	try {
 		auto statement = db->execute("SELECT * FROM rusqltest");
 
-		int n;
-		std::string s;
-		statement.bind_results(n, s);
+		statement.bind_all_self();
 
 		test(statement.fetch(), "first result");
 		test(statement.get<int>("id") == 5, "first result int");

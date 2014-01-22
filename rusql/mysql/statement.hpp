@@ -68,6 +68,9 @@ namespace rusql { namespace mysql {
 		std::vector<MYSQL_BIND> parameters;
 		std::vector<MYSQL_BIND> output_parameters;
 		std::vector<OutputHelper> output_helpers;
+
+		// Memory for all possible row contents:
+		std::map<std::string, rusql::mysql::field::type::Column> auto_binds;
 		
 		Statement(Connection& connection_, std::string const query)
 		: connection(connection_)
@@ -296,6 +299,32 @@ namespace rusql { namespace mysql {
 			processor(bound, *this, column);
 			return result;
 		}
+
+		struct NamedBindFunctor {
+			template <enum_field_types t>
+			void visit(rusql::mysql::Statement &s, rusql::mysql::field::type::Column &bind) {
+				typedef typename rusql::mysql::field::type::TypeName<t>::type TypeName;
+				bind = TypeName();
+				s.bind_result_element(boost::get<TypeName>(bind));
+			}
+		};
+
+		void bind_all_self() {
+			auto_binds.clear();
+			reset_bind();
+
+			auto mysql_res = result_metadata();
+			while(MYSQL_FIELD *field = rusql::mysql::fetch_field(mysql_res.get())) {
+				std::string name = field->name;
+				auto &auto_bind = auto_binds[name];
+
+				rusql::mysql::field::type::visit_mysql_type(field->type, NamedBindFunctor(), *this, auto_bind);
+			}
+
+			// finish the binding of these results
+			bind_results_append();
+		}
+
 	};
 
 	namespace field {

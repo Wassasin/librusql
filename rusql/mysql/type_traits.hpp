@@ -4,6 +4,7 @@
 #include <functional>
 
 #include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
 namespace rusql { namespace mysql {
 	template <typename T>
@@ -111,6 +112,89 @@ namespace rusql { namespace mysql {
 		}
 		
 		namespace type {
+			template <enum_field_types type>
+			struct TypeName {};
+
+#define DEFINE_TYPE(mysql, cpp) \
+	template <> \
+	struct TypeName<mysql> { \
+		typedef cpp type; \
+	}
+			DEFINE_TYPE(MYSQL_TYPE_DECIMAL, long);
+			DEFINE_TYPE(MYSQL_TYPE_TINY, long);
+			DEFINE_TYPE(MYSQL_TYPE_SHORT, long);
+			DEFINE_TYPE(MYSQL_TYPE_LONG, long);
+			//DEFINE_TYPE(MYSQL_TYPE_FLOAT, double);
+			//DEFINE_TYPE(MYSQL_TYPE_DOUBLE, double);
+			DEFINE_TYPE(MYSQL_TYPE_NULL, boost::none_t);
+			DEFINE_TYPE(MYSQL_TYPE_TIMESTAMP, long);
+			DEFINE_TYPE(MYSQL_TYPE_LONGLONG, long);
+			DEFINE_TYPE(MYSQL_TYPE_INT24, long);
+			DEFINE_TYPE(MYSQL_TYPE_DATE, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_TIME, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_DATETIME, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_YEAR, long);
+			DEFINE_TYPE(MYSQL_TYPE_NEWDATE, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_VARCHAR, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_BIT, long);
+			DEFINE_TYPE(MYSQL_TYPE_NEWDECIMAL, long);
+			DEFINE_TYPE(MYSQL_TYPE_ENUM, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_SET, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_TINY_BLOB, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_MEDIUM_BLOB, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_LONG_BLOB, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_BLOB, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_VAR_STRING, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_STRING, std::string);
+			DEFINE_TYPE(MYSQL_TYPE_GEOMETRY, std::string);
+#undef DEFINE_TYPE
+
+			typedef boost::variant<boost::none_t, long, double, std::string> Column;
+
+			template <typename Functor, typename... Tail>
+			void visit_mysql_type(enum_field_types mysql_type, Functor f, Tail&... tail) {
+				switch(mysql_type) {
+#define SWITCH_TYPE(mysql) \
+				case mysql: \
+					f.template visit<mysql>(tail...); \
+					break
+
+				SWITCH_TYPE(MYSQL_TYPE_DECIMAL);
+				SWITCH_TYPE(MYSQL_TYPE_TINY);
+				SWITCH_TYPE(MYSQL_TYPE_SHORT);
+				SWITCH_TYPE(MYSQL_TYPE_LONG);
+				//SWITCH_TYPE(MYSQL_TYPE_FLOAT);
+				//SWITCH_TYPE(MYSQL_TYPE_DOUBLE);
+				SWITCH_TYPE(MYSQL_TYPE_NULL);
+				SWITCH_TYPE(MYSQL_TYPE_TIMESTAMP);
+				SWITCH_TYPE(MYSQL_TYPE_LONGLONG);
+				SWITCH_TYPE(MYSQL_TYPE_INT24);
+				SWITCH_TYPE(MYSQL_TYPE_DATE);
+				SWITCH_TYPE(MYSQL_TYPE_TIME);
+				SWITCH_TYPE(MYSQL_TYPE_DATETIME);
+				SWITCH_TYPE(MYSQL_TYPE_YEAR);
+				SWITCH_TYPE(MYSQL_TYPE_NEWDATE);
+				SWITCH_TYPE(MYSQL_TYPE_VARCHAR);
+				SWITCH_TYPE(MYSQL_TYPE_BIT);
+				SWITCH_TYPE(MYSQL_TYPE_NEWDECIMAL);
+				SWITCH_TYPE(MYSQL_TYPE_ENUM);
+				SWITCH_TYPE(MYSQL_TYPE_SET);
+				SWITCH_TYPE(MYSQL_TYPE_TINY_BLOB);
+				SWITCH_TYPE(MYSQL_TYPE_MEDIUM_BLOB);
+				SWITCH_TYPE(MYSQL_TYPE_LONG_BLOB);
+				SWITCH_TYPE(MYSQL_TYPE_BLOB);
+				SWITCH_TYPE(MYSQL_TYPE_VAR_STRING);
+				SWITCH_TYPE(MYSQL_TYPE_STRING);
+				SWITCH_TYPE(MYSQL_TYPE_GEOMETRY);
+
+				case MYSQL_TYPE_FLOAT:
+				case MYSQL_TYPE_DOUBLE:
+				default:
+					throw std::runtime_error("Unknown MySQL type: " + mysql_type);
+#undef SWITCH_TYPE
+				};
+			}
+
 			template <enum_field_types type> 
 			struct Tag {
 				template <typename T>
