@@ -296,8 +296,22 @@ namespace rusql { namespace mysql {
 			// if this cell is NULL -> initializes T to default value, but should throw (TODO)
 			fetch_column(&bound, column, 0);
 
+			// result is not actually used by check_null_allowed, but used to overload on optional
+			check_null_allowed(bound, result);
 			processor(bound, *this, column);
 			return result;
+		}
+
+		template <typename T>
+		void check_null_allowed(MYSQL_BIND&, boost::optional<T>&) {
+			// NULL is always allowed for an optional
+		}
+
+		template <typename T>
+		void check_null_allowed(MYSQL_BIND& bound, T&) {
+			if(*bound.is_null) {
+				throw std::runtime_error("Fetching a NULL cell in an non-optional variable");
+			}
 		}
 
 		struct NamedBindFunctor {
@@ -367,6 +381,10 @@ namespace rusql { namespace mysql {
 			struct String {
 				static OutputProcessor get(std::string &x) {
 					return [&x](MYSQL_BIND &b, Statement &s, unsigned int column) {
+						if(*b.is_null) {
+							x.clear();
+							throw std::runtime_error("Fetching a NULL cell in an non-optional variable");
+						}
 						Fetch<std::string>::fetch(b, s, column, x);
 					};
 				}
@@ -390,10 +408,15 @@ namespace rusql { namespace mysql {
 				}
 			};
 
-			struct NoPostProcessing {
+			struct CheckNullPostProcessing {
 				template <typename T>
-				static OutputProcessor get(T&) {
-					return [](MYSQL_BIND&, Statement &, unsigned int) {};
+				static OutputProcessor get(T &x) {
+					return [&x](MYSQL_BIND &b, Statement &, unsigned int) {
+						if(*b.is_null) {
+							x = T();
+							throw std::runtime_error("Fetching a NULL cell into a non-optional variable");
+						}
+					};
 				}
 			};
 		}

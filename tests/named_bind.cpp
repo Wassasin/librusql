@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(22);
+	test_init(23);
 
 	// TODO: after named_bind() is added, throw if it is called without execute()
 	// TODO: throw if get() was called without fetch()
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 	db->execute("CREATE TABLE rusqltest (`id` INT(10) NOT NULL, `value` VARCHAR(10) NULL)");
 	db->execute("INSERT INTO rusqltest VALUES (?, ?), (?, NULL), (?, NULL)", 5, "a", 6, 7);
 
-	test_start_try(12);
+	test_start_try(13);
 	try {
 		auto statement = db->execute("SELECT * FROM rusqltest");
 
@@ -60,15 +60,13 @@ int main(int argc, char *argv[]) {
 		placeholder = statement.get<decltype(placeholder)>("value");
 		test(!placeholder, "second result string is not set");
 
-		// TODO: this should throw someday
-		/*bool threw = false;
+		bool threw = false;
 		try {
 			statement.get<std::string>("value");
 		} catch(std::exception &e) {
 			threw = true;
-			diag(e);
 		}
-		test(threw, "get<string> doesn't return");*/
+		test(threw, "get<string> doesn't return");
 
 		test(statement.fetch(), "third result");
 		placeholder = statement.get<decltype(placeholder)>("value");

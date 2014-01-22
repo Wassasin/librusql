@@ -118,7 +118,7 @@ namespace rusql { namespace mysql {
 #define DEFINE_TYPE(mysql, cpp) \
 	template <> \
 	struct TypeName<mysql> { \
-		typedef cpp type; \
+		typedef boost::optional<cpp> type; \
 	}
 			DEFINE_TYPE(MYSQL_TYPE_DECIMAL, long);
 			DEFINE_TYPE(MYSQL_TYPE_TINY, long);
@@ -126,7 +126,7 @@ namespace rusql { namespace mysql {
 			DEFINE_TYPE(MYSQL_TYPE_LONG, long);
 			//DEFINE_TYPE(MYSQL_TYPE_FLOAT, double);
 			//DEFINE_TYPE(MYSQL_TYPE_DOUBLE, double);
-			DEFINE_TYPE(MYSQL_TYPE_NULL, boost::none_t);
+			//DEFINE_TYPE(MYSQL_TYPE_NULL, boost::none_t);
 			DEFINE_TYPE(MYSQL_TYPE_TIMESTAMP, long);
 			DEFINE_TYPE(MYSQL_TYPE_LONGLONG, long);
 			DEFINE_TYPE(MYSQL_TYPE_INT24, long);
@@ -149,7 +149,7 @@ namespace rusql { namespace mysql {
 			DEFINE_TYPE(MYSQL_TYPE_GEOMETRY, std::string);
 #undef DEFINE_TYPE
 
-			typedef boost::variant<boost::none_t, long, double, std::string> Column;
+			typedef boost::variant<boost::optional<long>, boost::optional<double>, boost::optional<std::string>> Column;
 
 			template <typename Functor, typename... Tail>
 			void visit_mysql_type(enum_field_types mysql_type, Functor f, Tail&... tail) {
@@ -165,7 +165,7 @@ namespace rusql { namespace mysql {
 				SWITCH_TYPE(MYSQL_TYPE_LONG);
 				//SWITCH_TYPE(MYSQL_TYPE_FLOAT);
 				//SWITCH_TYPE(MYSQL_TYPE_DOUBLE);
-				SWITCH_TYPE(MYSQL_TYPE_NULL);
+				//SWITCH_TYPE(MYSQL_TYPE_NULL);
 				SWITCH_TYPE(MYSQL_TYPE_TIMESTAMP);
 				SWITCH_TYPE(MYSQL_TYPE_LONGLONG);
 				SWITCH_TYPE(MYSQL_TYPE_INT24);
@@ -189,6 +189,7 @@ namespace rusql { namespace mysql {
 
 				case MYSQL_TYPE_FLOAT:
 				case MYSQL_TYPE_DOUBLE:
+				case MYSQL_TYPE_NULL:
 				default:
 					throw std::runtime_error("Unknown MySQL type: " + mysql_type);
 #undef SWITCH_TYPE
@@ -273,11 +274,11 @@ namespace rusql { namespace mysql {
 		namespace post_processors {
 			struct Optional;
 			struct String;
-			struct NoPostProcessing;
+			struct CheckNullPostProcessing;
 		}
 	}
 	
-	struct NoProcessing { typedef field::post_processors::NoPostProcessing output_processor; };
+	struct NoProcessing { typedef field::post_processors::CheckNullPostProcessing output_processor; };
 	struct Primitive : NoProcessing
 	                    { typedef field::buffer::Primitive data;
 	                      typedef data output_data; };

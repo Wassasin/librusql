@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(44);
+	test_init(46);
 	db->execute("CREATE TABLE rusqltest (`value` VARCHAR(10) NOT NULL)");
 
 	test_start_try(6);
@@ -198,6 +198,41 @@ int main(int argc, char *argv[]) {
 		diag(e);
 	}
 	test_finish_try();
+
+	db->execute("DELETE FROM rusqltest");
+	db->execute("INSERT INTO rusqltest VALUES (6, NULL)");
+
+	bool threw = false;
+	{
+		auto statement = db->execute("SELECT * FROM rusqltest");
+		int number = 2;
+		std::string value = "foo";
+		statement.bind_results(number, value);
+		try {
+			statement.fetch();
+		} catch(std::exception &e) {
+			threw = true;
+		}
+	}
+	test(threw, "Threw upon fetch() when NULL value was bound to non-optional string");
+
+	db->execute("DELETE FROM rusqltest");
+	db->execute("INSERT INTO rusqltest VALUES (NULL, ?)", "quux");
+
+	threw = false;
+	{
+		auto statement = db->execute("SELECT * FROM rusqltest");
+		int number = 2;
+		std::string value = "foo";
+		statement.bind_results(number, value);
+		try {
+			statement.fetch();
+		} catch(std::exception &e) {
+			threw = true;
+		}
+	}
+	test(threw, "Threw upon fetch() when NULL value was bound to non-optional int");
+
 	db->execute("DROP TABLE rusqltest");
 
 	return 0;
