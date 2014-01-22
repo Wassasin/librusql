@@ -217,7 +217,7 @@ namespace rusql { namespace mysql {
 			return rusql::mysql::stmt_bind_result(statement, binds);
 		}
 
-		int fetch_column(MYSQL_BIND* b, unsigned int column, unsigned long offset) {
+		void fetch_column(MYSQL_BIND* b, unsigned int column, unsigned long offset) {
 			return rusql::mysql::stmt_fetch_column(statement, b, column, offset);
 		}
 
