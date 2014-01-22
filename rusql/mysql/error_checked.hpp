@@ -110,4 +110,6 @@ namespace rusql { namespace mysql {
 
 	//! Returns non-zero when there are no more rows to fetch
 	int stmt_fetch(MYSQL_STMT* statement);
+
+	MYSQL_RES *stmt_result_metadata(MYSQL_STMT *statement);
 }}

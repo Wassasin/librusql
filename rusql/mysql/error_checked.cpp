@@ -256,5 +256,22 @@ namespace rusql { namespace mysql {
 
 		return result;
 	}
+
+	MYSQL_RES *stmt_result_metadata(MYSQL_STMT *statement){
+		BARK;
+		MYSQL_RES *result;
+
+		{
+			CHECK;
+			result = mysql_stmt_result_metadata(statement);
+		}
+
+		if(result == NULL) {
+			throw SQLError(std::string(__FUNCTION__) + " failed: no meta information exists for the prepared query");
+		}
+
+		return result;
+	}
+
 	#undef CHECK
 }}

@@ -3,6 +3,7 @@
 #include <boost/noncopyable.hpp>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 #include "error_checked.hpp"
 #include "type_traits.hpp"
@@ -256,6 +257,10 @@ namespace rusql { namespace mysql {
 			auto const result = rusql::mysql::stmt_close(statement);
 			statement = nullptr;
 			return result;
+		}
+
+		std::shared_ptr<MYSQL_RES> result_metadata(){
+			return std::shared_ptr<MYSQL_RES>(rusql::mysql::stmt_result_metadata(statement), rusql::mysql::free_result);
 		}
 	};
 
