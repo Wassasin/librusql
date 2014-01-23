@@ -293,7 +293,7 @@ namespace rusql { namespace mysql {
 
 			// if this column is unbound -> fetch_column acts as if it was NULL, but should throw (TODO)
 			// if T is optional -> correctly sets optional to uninitialized or initialized value
-			// if this cell is NULL -> initializes T to default value, but should throw (TODO)
+			// if this cell is NULL -> throws
 			fetch_column(&bound, column, 0);
 
 			// result is not actually used by check_null_allowed, but used to overload on optional
