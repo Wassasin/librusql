@@ -277,7 +277,7 @@ namespace rusql { namespace mysql {
 				}
 				column++;
 			}
-			throw std::runtime_error("No column with that name");
+			throw std::runtime_error("No column with that name: " + name);
 		}
 
 		template <typename T>
@@ -310,7 +310,8 @@ namespace rusql { namespace mysql {
 		template <typename T>
 		void check_null_allowed(MYSQL_BIND& bound, T&) {
 			if(*bound.is_null) {
-				throw std::runtime_error("Fetching a NULL cell in an non-optional variable");
+				// TODO: how do we find out if field is bound?
+				throw std::runtime_error("Fetching a NULL cell in an non-optional variable (or maybe field is unbound?)");
 			}
 		}
 
