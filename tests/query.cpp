@@ -15,7 +15,7 @@ static bool contains(rusql::ResultSet &rs, std::string value) {
 
 int main(int argc, char *argv[]) {
 	auto db = get_database(argc, argv);
-	test_init(8);
+	test_init(10);
 	try {
 		db->execute("CREATE TABLE rusqltest (`value` INT(2) NOT NULL)");
 		pass("could run CREATE TABLE");
@@ -69,5 +69,20 @@ int main(int argc, char *argv[]) {
 		diag(e);
 	}
 	test_finish_try();
+
+	try {
+		db->query("DROP TABLE nonexistant");
+		fail("DROP nonexistant table throws");
+	} catch(std::exception &e) {
+		pass("DROP nonexistant table throws");
+	}
+
+	try {
+		db->query("SELECT 1");
+		pass("Next query succeeds too");
+	} catch(std::exception &e) {
+		fail("Next query succeeds too");
+	}
+
 	return 0;
 }

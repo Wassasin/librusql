@@ -8,6 +8,13 @@ constexpr static bool output_calls = false;
 #define BARK do { if(output_calls) std::cerr << __FUNCTION__ << std::endl; } while(false)
 
 namespace rusql { namespace mysql {
+	void clear_mysql_error(MYSQL *connection) {
+		// If the MySQL server is available, ping() clears the error
+		// If not, the current error is "MySQL server is not available"
+		// So this is our best guess:
+		mysql_ping(connection);
+	}
+
 	ErrorCheckerConnection::ErrorCheckerConnection(MYSQL* connection_, const char* f)
 	: connection(connection_)
 	, function(f) {
@@ -16,13 +23,14 @@ namespace rusql { namespace mysql {
 	
 	void ErrorCheckerConnection::check_and_throw(std::string const f) {
 		if(mysql_errno(connection)){
-			char const * const error = mysql_error(connection);
-			if(error){
+			std::string error = mysql_error(connection);
+			if(!error.empty()){
+				clear_mysql_error(connection);
 				throw SQLError(f, error);
 			}
 		}
 	}
-	
+
 	ErrorCheckerConnection::~ErrorCheckerConnection() {
 		check_and_throw(function);
 	}

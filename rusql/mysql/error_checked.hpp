@@ -18,6 +18,7 @@ namespace rusql { namespace mysql {
 	};
 	
 	struct Connection;
+	void clear_mysql_error(MYSQL *connection);
 	struct ErrorCheckerConnection {
 		MYSQL* connection;
 		char const * function;
