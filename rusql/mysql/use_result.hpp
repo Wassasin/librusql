@@ -54,6 +54,10 @@ namespace rusql { namespace mysql {
 		//! Closes and frees the set.
 		void close(){
 			assert(result != nullptr);
+			// MySQL use_result documentation says "you must
+			// execute mysql_fetch_row() until a NULL value is
+			// returned, otherwise, the unfetched rows are returned
+			// as part of the result set for your next query."
 			while(fetch_row() != nullptr);
 			rusql::mysql::free_result(result);
 			result = nullptr;
