@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 	test_start_try(6);
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?), (?), (?)", "a", "b", "c");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		test(res.get_string(0) == "a", "a was inserted");
 		res.next();
 		test(res, "two results");
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
 	test_start_try(7);
 	try {
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		test(res.num_rows() == 3, "3 results in resultset using num_rows()");
 		test(res.get_string("value") == "a", "a was inserted");
 		res.next();
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 5);
 		pass("Could insert numeric into string field");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		test(res.get_string(0) == "5", "Numeric was stored into string field correctly");
 	} catch(std::exception &e) {
 		diag(e);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 	db->execute("INSERT INTO rusqltest VALUES (?)", "6");
 	test_start_try(2);
 	try {
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		auto r = res.get_uint64(0);
 		pass("Could retrieve numeric from string field");
 		test(r == 6, "Numeric was retrieved from string field correctly");
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	test_start_try(2);
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 3);
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		test(res.get_uint64(0) == 3, "3 was inserted");
 		res.next();
 		test(!res, "not more than one result");
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 
 	test_start_try(2);
 	try {
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		auto r = res.get_string(0);
 		pass("Could retrieve string from numeric field");
 		test(r == "3", "Retrieved string is correct");
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", "4");
 		pass("Could insert string into numeric field");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		auto r = res.get_uint64(0);
 		test(r == 4, "Inserted string into numeric field is correct");
 	} catch(std::exception &e) {
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", 2);
 		pass("Insert values into NULL field");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		bool r = res.is_null(0);
 		pass("Could ask if value is null");
 		test(!r, "Value inserted from 2 was not null");
@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?)", boost::none);
 		pass("Insert boost::none");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		bool r = res.is_null(0);
 		pass("Could ask if value is null");
 		test(r, "Value inserted from none was null");
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 	try {
 		db->execute("INSERT INTO rusqltest VALUES (?, ?)", std::vector<std::string>{"12", "quux"});
 		pass("Insert number and string using vector");
-		auto res = db->query("SELECT * FROM rusqltest");
+		auto res = db->select_query("SELECT * FROM rusqltest");
 		auto first = res.get_uint64(0);
 		test(first == 12, "Number was inserted correctly");
 		auto second = res.get_string(1);

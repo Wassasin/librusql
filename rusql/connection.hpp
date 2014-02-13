@@ -31,14 +31,34 @@ namespace rusql {
 		}
 		
 		ResultSet use_result(){
+			if(connection.field_count() == 0) {
+				throw mysql::SQLError("use_result() called but connection has no fields to return; query failed or select_query() used on non-SELECT query?");
+			}
 			return ResultSet(connection);
 		}
 
-		ResultSet query (std::string const q) {
+		ResultSet select_query (std::string const q) {
 			connection.query(q);
 			ResultSet set = use_result();
 			result = set.get_token();
 			return set;
+		}
+
+		void query (std::string const q) {
+			connection.query(q);
+			if(connection.field_count() != 0) {
+				// MySQL does not allow a SELECT query whose
+				// results are not all fetched. Bring the
+				// connection in safe state again, then throw
+				{
+					// this creates a result set, and in
+					// the destructor, walks through all
+					// result rows and then frees the
+					// result set
+					ResultSet set(connection);
+				}
+				throw mysql::SQLError("query() called but connection has fields to return; use select_query()");
+			}
 		}
 
 		PreparedStatement prepare (std::string const q) {

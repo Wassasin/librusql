@@ -70,7 +70,12 @@ namespace rusql {
 			return num;
 		}
 
-		ResultSet query(std::string const q) {
+		ResultSet select_query(std::string const q) {
+			boost::mutex::scoped_lock lock(connections_mutex);
+			return get_connection().select_query(q);
+		}
+
+		void query(std::string const q){
 			boost::mutex::scoped_lock lock(connections_mutex);
 			return get_connection().query(q);
 		}

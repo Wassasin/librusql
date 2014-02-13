@@ -18,7 +18,11 @@ namespace rusql { namespace mysql {
 		: connection(connection_)
 		, result(connection->use_result())
 		, current_row(nullptr)
-		{}
+		{
+			if(result == nullptr) {
+				throw SQLError(__FUNCTION__, "Asked for UseResult on a Connection which does not have a UseResult ready (query failed, or not a SELECT-type query?)");
+			}
+		}
 		
 		UseResult(UseResult&& x)
 		: connection(x.connection)

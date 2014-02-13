@@ -19,13 +19,13 @@ int main(int argc, char *argv[]) {
 	test_init(9 + num_products * 4);
 
 	// set up three connections, iterate through them simultaneously
-	auto rsOne  = db->query("SELECT one FROM rusqltest");
+	auto rsOne  = db->select_query("SELECT one FROM rusqltest");
 	test(db->number_of_active_connections() >= 1, "one connection active");
 	int active_connections_before;
 	{
-		auto rsTwo  = db->query("SELECT two FROM rusqltest");
+		auto rsTwo  = db->select_query("SELECT two FROM rusqltest");
 		test(db->number_of_active_connections() >= 2, "two connections active");
-		auto rsProd = db->query("SELECT product FROM rusqltest");
+		auto rsProd = db->select_query("SELECT product FROM rusqltest");
 		test(db->number_of_active_connections() >= 3, "three connections active");
 
 		for(int i = 0; i < num_products; ++i) {
