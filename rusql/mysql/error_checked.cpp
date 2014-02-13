@@ -66,7 +66,7 @@ namespace rusql { namespace mysql {
 		mysql_thread_end();
 	}
 	
-	#define CHECK ErrorCheckerConnection(connection, __FUNCTION__)
+	#define CHECK ErrorCheckerConnection rusql_error_checker(connection, __FUNCTION__)
 	MYSQL* init(MYSQL* connection){
 		BARK;
 		CHECK;
@@ -184,7 +184,7 @@ namespace rusql { namespace mysql {
 
 	#undef CHECK
 	
-	#define CHECK ErrorCheckerStatement(statement, __FUNCTION__)
+	#define CHECK ErrorCheckerStatement rusql_error_checker_stmt(statement, __FUNCTION__)
 	my_bool stmt_bind_param(MYSQL_STMT* statement, MYSQL_BIND* binds){
 		BARK;
 		CHECK;
