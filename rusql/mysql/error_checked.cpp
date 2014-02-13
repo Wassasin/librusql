@@ -119,10 +119,17 @@ namespace rusql { namespace mysql {
 		return mysql_real_connect(connection, char_ptr(host), char_ptr(user), char_ptr(password), char_ptr(database), port, char_ptr(unix_socket), client_flags);
 	}
 	
-	int query(MYSQL* connection, std::string const query){
+	void query(MYSQL* connection, std::string const query){
 		BARK;
-		CHECK;
-		return mysql_real_query(connection, query.c_str(), query.length());
+		int result;
+		{
+			CHECK;
+			result = mysql_real_query(connection, query.c_str(), query.length());
+		}
+
+		if(result != 0){
+			throw SQLError(std::string(__FUNCTION__) + " failed, but mysql didn't notice (function returned error, but errno and errmsg unset)");
+		}
 	}
 	
 	MYSQL_FIELD* fetch_field(MYSQL_RES* result) {

@@ -62,7 +62,7 @@ namespace rusql { namespace mysql {
 		unsigned long client_flags
 	);
 	
-	int query(MYSQL* connection, std::string const query);
+	void query(MYSQL* connection, std::string const query);
 	
 	//! Doesn't return errors
 	MYSQL_FIELD* fetch_field(MYSQL_RES* result);

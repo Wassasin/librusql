@@ -62,7 +62,7 @@ namespace rusql { namespace mysql {
 			return rusql::mysql::connect(&database, boost::none, boost::none, boost::none, database_, 0, boost::none, client_flag);
 		}
 		
-		inline int query(std::string const query_string) {
+		inline void query(std::string const query_string) {
 			return rusql::mysql::query(&database, query_string);
 		}
 	};
