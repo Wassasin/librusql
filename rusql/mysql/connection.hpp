@@ -21,7 +21,13 @@ namespace rusql { namespace mysql {
 		{}
 
 		~Connection() {
-			rusql::mysql::close(&database);
+			try
+			{
+				rusql::mysql::close(&database);
+			} catch(const SQLError& e)
+			{
+				std::cerr << "Exception when closing Connection, ignoring: " << e.what() << std::endl;
+			}
 		}
 		
 		MYSQL database;
