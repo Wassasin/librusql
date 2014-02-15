@@ -15,13 +15,8 @@ namespace rusql { namespace mysql {
 		mysql_ping(connection);
 	}
 
-	ErrorCheckerConnection::ErrorCheckerConnection(MYSQL* connection_, const char* f)
-	: connection(connection_)
-	, function(f) {
-		check_and_throw(std::string("Before ") + function);
-	}
-	
-	void ErrorCheckerConnection::check_and_throw(std::string const f) {
+	void check_and_throw_conn(MYSQL* connection, std::string f)
+	{
 		if(mysql_errno(connection)){
 			std::string error = mysql_error(connection);
 			if(!error.empty()){
@@ -31,22 +26,8 @@ namespace rusql { namespace mysql {
 		}
 	}
 
-	ErrorCheckerConnection::~ErrorCheckerConnection() {
-		check_and_throw(function);
-	}
-	
-	ErrorCheckerStatement::ErrorCheckerStatement(MYSQL_STMT* statement_, char const* f)
-	: statement(statement_)
-	, function(f)
+	void check_and_throw_stmt(MYSQL_STMT* statement, std::string f)
 	{
-		check_and_throw(std::string("Before ") + function);
-	}
-	
-	ErrorCheckerStatement::~ErrorCheckerStatement() {
-		check_and_throw(function);
-	}
-	
-	void ErrorCheckerStatement::check_and_throw(std::string const f) {
 		auto const error_code = mysql_stmt_errno(statement);
 		char const * const error = mysql_stmt_error(statement);
 		if(error_code != 0 || error[0]){
@@ -66,41 +47,42 @@ namespace rusql { namespace mysql {
 		mysql_thread_end();
 	}
 	
-	#define CHECK ErrorCheckerConnection rusql_error_checker(connection, __FUNCTION__)
+	#define CHECK(prefix) check_and_throw_conn(connection, std::string(prefix) + __FUNCTION__)
+	#define CHECK_BEFORE CHECK("Before ")
+	#define CHECK_AFTER CHECK("After ")
+
+	#define SAFE_RETURN(stmt) { CHECK_BEFORE; auto result_ = stmt; CHECK_AFTER; return result_; }
+
 	MYSQL* init(MYSQL* connection){
 		BARK;
-		CHECK;
-		return mysql_init(connection);
+		SAFE_RETURN(mysql_init(connection));
 	}
 
 	void close(MYSQL* connection) {
 		BARK;
-		CHECK;
-		return mysql_close(connection);
+		CHECK_BEFORE;
+		mysql_close(connection);
+		CHECK_AFTER;
 	}
 	
 	int ping(MYSQL* connection){
 		BARK;
-		CHECK;
-		return mysql_ping(connection);
+		SAFE_RETURN(mysql_ping(connection));
 	}
 	
 	MYSQL_RES* use_result(MYSQL* connection) {
 		BARK;
-		CHECK;
-		return mysql_use_result(connection);
+		SAFE_RETURN(mysql_use_result(connection));
 	}
 	
 	size_t field_count(MYSQL* connection){
 		BARK;
-		CHECK;
-		return mysql_field_count(connection);
+		SAFE_RETURN(mysql_field_count(connection));
 	}
 	
 	MYSQL_STMT* stmt_init(MYSQL* connection){
 		BARK;
-		CHECK;
-		return mysql_stmt_init(connection);
+		SAFE_RETURN(mysql_stmt_init(connection));
 	}
 	
 	MYSQL* connect(
@@ -114,17 +96,18 @@ namespace rusql { namespace mysql {
 		unsigned long client_flags
 	) {
 		BARK;
-		CHECK;
 		auto char_ptr = [](boost::optional<std::string const> x) { return (x ? x->c_str() : nullptr); };
-		return mysql_real_connect(connection, char_ptr(host), char_ptr(user), char_ptr(password), char_ptr(database), port, char_ptr(unix_socket), client_flags);
+
+		SAFE_RETURN(mysql_real_connect(connection, char_ptr(host), char_ptr(user), char_ptr(password), char_ptr(database), port, char_ptr(unix_socket), client_flags));
 	}
 	
 	void query(MYSQL* connection, std::string const query){
 		BARK;
 		int result;
 		{
-			CHECK;
+			CHECK_BEFORE;
 			result = mysql_real_query(connection, query.c_str(), query.length());
+			CHECK_AFTER;
 		}
 
 		if(result != 0){
@@ -164,64 +147,59 @@ namespace rusql { namespace mysql {
 	
 	MYSQL_ROW fetch_row(MYSQL* connection, MYSQL_RES* result){
 		BARK;
-		CHECK;
-		return mysql_fetch_row(result);
+		SAFE_RETURN(mysql_fetch_row(result));
 	}
 
 	unsigned long long num_rows(MYSQL *connection, MYSQL_RES *result) {
 		BARK;
-		CHECK;
-		return mysql_num_rows(result);
+		SAFE_RETURN(mysql_num_rows(result));
 	}
 
 	unsigned long long insert_id(MYSQL *connection) {
 		BARK;
-		return mysql_insert_id(connection);
+		SAFE_RETURN(mysql_insert_id(connection));
 	}
+
+	#undef CHECK
+	#define CHECK(prefix) check_and_throw_stmt(statement, std::string(prefix) + __FUNCTION__)
 
 	unsigned long stmt_param_count(MYSQL_STMT* statement){
 		BARK;
-		return mysql_stmt_param_count(statement);
+		SAFE_RETURN(mysql_stmt_param_count(statement));
 	}
 
 	unsigned long stmt_field_count(MYSQL_STMT* statement){
 		BARK;
-		return mysql_stmt_field_count(statement);
+		SAFE_RETURN(mysql_stmt_field_count(statement));
 	}
 
-	#undef CHECK
-	
-	#define CHECK ErrorCheckerStatement rusql_error_checker_stmt(statement, __FUNCTION__)
 	my_bool stmt_bind_param(MYSQL_STMT* statement, MYSQL_BIND* binds){
 		BARK;
-		CHECK;
-		return mysql_stmt_bind_param(statement, binds);
+		SAFE_RETURN(mysql_stmt_bind_param(statement, binds));
 	}
 	
 	my_bool stmt_bind_result(MYSQL_STMT* statement, MYSQL_BIND* binds){
 		BARK;
-		CHECK;
-		return mysql_stmt_bind_result(statement, binds);
+		SAFE_RETURN(mysql_stmt_bind_result(statement, binds));
 	}
 
 	void stmt_fetch_column(MYSQL_STMT* statement, MYSQL_BIND* bind, unsigned int column, unsigned long offset) {
 		BARK;
-		CHECK;
+		CHECK_BEFORE;
 		if(mysql_stmt_fetch_column(statement, bind, column, offset) != 0) {
 			throw SQLError(std::string(__FUNCTION__) + " failed, but mysql didn't notice");
 		}
+		CHECK_AFTER;
 	}
 	
 	my_bool stmt_close(MYSQL_STMT* statement){
 		BARK;
-		CHECK;
-		return mysql_stmt_close(statement);
+		SAFE_RETURN(mysql_stmt_close(statement));
 	}
 	
 	int stmt_prepare(MYSQL_STMT* statement, std::string q){
 		BARK;
-		CHECK;
-		return mysql_stmt_prepare(statement, q.c_str(), q.length());
+		SAFE_RETURN(mysql_stmt_prepare(statement, q.c_str(), q.length()));
 	}
 	
 	unsigned long long stmt_insert_id(MYSQL_STMT* statement) {
@@ -231,10 +209,11 @@ namespace rusql { namespace mysql {
 
 	void stmt_store_result(MYSQL_STMT *statement) {
 		BARK;
-		CHECK;
+		CHECK_BEFORE;
 		if(mysql_stmt_store_result(statement) != 0) {
 			throw SQLError(std::string(__FUNCTION__) + " failed, but mysql didn't notice");
 		}
+		CHECK_AFTER;
 	}
 
 	unsigned long long stmt_num_rows(MYSQL_STMT *statement) {
@@ -244,11 +223,10 @@ namespace rusql { namespace mysql {
 
 	int stmt_execute(MYSQL_STMT* statement){
 		BARK;
-		int result;
-		{
-			CHECK;
-			result = mysql_stmt_execute(statement);
-		}
+
+		CHECK_BEFORE;
+		int result = mysql_stmt_execute(statement);
+		CHECK_AFTER;
 
 		if(result != 0){
 			throw SQLError(std::string(__FUNCTION__) + " failed, but mysql didn't notice (function returned error, but errno and errmsg unset)");
@@ -258,12 +236,10 @@ namespace rusql { namespace mysql {
 
 	int stmt_fetch(MYSQL_STMT* statement){
 		BARK;
-		int result;
 
-		{
-			CHECK;
-			result = mysql_stmt_fetch(statement);
-		}
+		CHECK_BEFORE;
+		int result = mysql_stmt_fetch(statement);
+		CHECK_AFTER;
 
 		if(!(result == 0 || result == MYSQL_NO_DATA || result == MYSQL_DATA_TRUNCATED)){
 			throw SQLError(std::string(__FUNCTION__) + "failed, but mysql didn't notice (function returned error, but errno and errmsg unset)");
@@ -274,12 +250,10 @@ namespace rusql { namespace mysql {
 
 	MYSQL_RES *stmt_result_metadata(MYSQL_STMT *statement){
 		BARK;
-		MYSQL_RES *result;
 
-		{
-			CHECK;
-			result = mysql_stmt_result_metadata(statement);
-		}
+		CHECK_BEFORE;
+		MYSQL_RES *result = mysql_stmt_result_metadata(statement);
+		CHECK_AFTER;
 
 		if(result == NULL) {
 			throw SQLError(std::string(__FUNCTION__) + " failed: no meta information exists for the prepared query");
