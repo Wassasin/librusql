@@ -47,7 +47,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules"
 
 find_package(MYSQL REQUIRED)
 include_directories(${MYSQL_INCLUDE_DIR})
-find_package(Boost COMPONENTS thread REQUIRED)
+find_package(Boost COMPONENTS system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(rusql_INCLUDE_DIRS ${MYSQL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS} PARENT_SCOPE)
